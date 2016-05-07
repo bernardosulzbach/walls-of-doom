@@ -130,7 +130,7 @@ int write_platforms(const Platform * platforms, const size_t platform_count) {
     size_t i;
     attron(COLOR_PAIR(PLATFORM_COLOR));
     for (i = 0; i < platform_count; i++) {
-        print_platform(&platforms[i]);
+        print_platform(&platforms[i], PLATFORM_HEAVY);
     }
     attroff(COLOR_PAIR(PLATFORM_COLOR));
     return 0;
