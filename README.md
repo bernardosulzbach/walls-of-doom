@@ -11,9 +11,11 @@ See [the Bitbucket issue tracker](https://bitbucket.org/mafagafogigante/walls-of
 
 # Continuous Integration Status
 
-[![Build Status](https://semaphoreci.com/api/v1/projects/7d008ba4-1535-427c-bfcb-f6dc9a53b963/828137/shields_badge.svg)](https://semaphoreci.com/mafagafogigante/walls-of-doom)
+## Semaphore CI
 
 This build server uses Ubuntu 14.04 64-bit and compiles with GCC 4.8.4.
+
+[![Build Status](https://semaphoreci.com/api/v1/projects/7d008ba4-1535-427c-bfcb-f6dc9a53b963/828137/shields_badge.svg)](https://semaphoreci.com/mafagafogigante/walls-of-doom)
 
 # Building and Running
 
