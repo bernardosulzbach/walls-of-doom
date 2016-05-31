@@ -6,6 +6,14 @@
 #include <math.h>
 #include <stdio.h>
 
+/**
+ * Physics calculations are done using floating-point operations.
+ *
+ * However, representation is discrete and relies on the *truncation* of coordinates.
+ *
+ * Therefore, two physical bodies will be on the same line if their truncated y values are equal.
+ */
+
 void log_if_not_normalized(const int value) {
     if (value < -1 && value > 1) {
         char buffer[256];
@@ -23,10 +31,19 @@ int bounding_box_equals(const BoundingBox * const a, const BoundingBox * const b
 }
 
 /**
+ * Evaluates whether or not two Vectors are on the same row.
+ *
+ * This is true if, and only if, the integral parts of the parameters are equal.
+ */
+int are_on_the_same_row(Vector a, Vector b) {
+    return ((long) a.y) == ((long) b.y);
+}
+
+/**
  * Evaluates whether or not a position is within a Platform.
  */
 int is_within_platform(Vector position, const Platform * const platform) {
-    if (position.y == platform->position.y) {
+    if (are_on_the_same_row(position, platform->position)) {
         if (position.x >= platform->position.x && position.x < platform->position.x + platform->width) {
             return 1;
         }
@@ -53,37 +70,35 @@ void shove_player(Player * const player, const Vector displacement) {
     }
 }
 
-void move_platform_horizontally(Player * const player, Platform * const platform, const int direction) {
-    log_if_not_normalized(direction);
-    if (player->position.y == platform->position.y) { // Fail fast if the platform is not on the same line
-        if (direction == 1) {
-            if (player->position.x == platform->position.x + platform->width) {
-                Vector displacement;
-                displacement.x = 1;
-                displacement.y = 0;
-                shove_player(player, displacement);
+void move_platform_horizontally(Player * const player, Platform * const platform) {
+    const double platform_end_x = platform->position.x + platform->velocity.x;
+    if (player->position.y == platform->position.y) { // Fail fast if the platform and the player are not on the same line
+        if (platform->velocity.x > 0.0) { // Platform moving to the right
+            if (player->position.x > platform->position.x + platform->width) { // Player to the right of the platform
+                if (player->position.x < platform_end_x + platform->width) { // Player should be shoved
+                    Vector displacement;
+                    displacement.x = platform->velocity.x - (player->position.x - platform->position.x + platform->width);
+                    displacement.y = 0.0;
+                    shove_player(player, displacement);
+                }
             }
-        } else if (direction == -1) {
-            if (player->position.x == platform->position.x - 1) {
-                Vector displacement;
-                displacement.x = -1;
-                displacement.y = 0;
-                shove_player(player, displacement);
+        } else if (platform->velocity.x < 0.0) { // Platform moving to the left
+            if (player->position.x < platform->position.x) { // Player to the left of the platform
+                if (player->position.x > platform_end_x) { // Player should be shoved
+                    Vector displacement;
+                    displacement.x = platform->velocity.x - (platform->position.x - player->position.x);
+                    displacement.y = 0.0;
+                    shove_player(player, displacement);
+                }
             }
         }
     } else if (is_over_platform(player->position, platform)) { // If the player is over the platform
         Vector displacement;
-        displacement.y = 0;
-        if (direction == 1) {
-            displacement.x = 1;
-        } else if (direction == -1) {
-            displacement.x = -1;
-        } else {
-            displacement.x = 0;
-        }
+        displacement.x = platform->velocity.x;
+        displacement.y = 0.0;
         shove_player(player, displacement);
     }
-    platform->position.x += direction;
+    platform->position.x += platform->velocity.x;
 }
 
 void move_platform_vertically(Player * const player, Platform * const platform, const int direction) {
@@ -105,7 +120,7 @@ void move_platform_vertically(Player * const player, Platform * const platform, 
             }
         }
     }
-    platform->position.y += direction;
+    platform->position.y += platform->velocity.y;
 }
 
 /**
@@ -148,12 +163,8 @@ int is_out_of_bounding_box(Platform * const platform, const BoundingBox * const 
 
 void update_platform(Player * const player, Platform * const platform, const BoundingBox * const box) {
     int i;
-    for (i = 0; i < fabs(platform->velocity.x); i++) {
-        move_platform_horizontally(player, platform, normalize(platform->velocity.x));
-    }
-    for (i = 0; i < fabs(platform->velocity.y); i++) {
-        move_platform_vertically(player, platform, normalize(platform->velocity.y));
-    }
+    move_platform_horizontally(player, platform);
+    move_platform_vertically(player, platform, normalize(platform->velocity.y));
     if (is_out_of_bounding_box(platform, box)) {
         reposition(player, platform, box);
     }

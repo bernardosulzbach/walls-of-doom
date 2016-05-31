@@ -20,6 +20,9 @@
 
 #define MAXIMUM_RECORD_ARRAY_SIZE 128
 
+#define HORIZONTAL_PLATFORM_BASE_SPEED 0.8
+#define VERTICAL_PLATFORM_BASE_SPEED 0.4
+
 typedef struct Menu {
     char *title;
     char **options;
@@ -125,14 +128,14 @@ int read_platforms(Platform *platforms) {
 
         platform->velocity.x = 0.0;
         platform->velocity.y = 0.0;
-        const int speed = input_integers[1 + 2 * i + 1];
+        const double speed = input_integers[1 + 2 * i + 1];
         const int movement_type = random_integer(0, 4);
         if (movement_type < 2) { // 40%
-            platform->velocity.x = speed;
+            platform->velocity.x = speed * HORIZONTAL_PLATFORM_BASE_SPEED;
         } else if (movement_type < 4) { // 40%
-            platform->velocity.x = -speed;
+            platform->velocity.x = -speed * HORIZONTAL_PLATFORM_BASE_SPEED;
         } else { // 20 %
-            platform->velocity.y = -speed;
+            platform->velocity.y = -speed * VERTICAL_PLATFORM_BASE_SPEED;
         }
     }
     
