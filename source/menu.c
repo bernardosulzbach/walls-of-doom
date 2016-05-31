@@ -120,19 +120,19 @@ int read_platforms(Platform *platforms) {
 
         platform->width = input_integers[1 + 2 * i];
 
-        platform->x = random_integer(1, COLS - 1);
-        platform->y = random_integer(4, LINES - 4);
+        platform->position.x = random_integer(1, COLS - 1);
+        platform->position.y = random_integer(4, LINES - 4);
 
-        platform->speed_x = 0;
-        platform->speed_y = 0;
+        platform->velocity.x = 0.0;
+        platform->velocity.y = 0.0;
         const int speed = input_integers[1 + 2 * i + 1];
         const int movement_type = random_integer(0, 4);
         if (movement_type < 2) { // 40%
-            platform->speed_x = speed;
+            platform->velocity.x = speed;
         } else if (movement_type < 4) { // 40%
-            platform->speed_x = -speed;
+            platform->velocity.x = -speed;
         } else { // 20 %
-            platform->speed_y = -speed;
+            platform->velocity.y = -speed;
         }
     }
     
@@ -144,8 +144,8 @@ int game(void) {
     read_player_name(name, PLAYER_NAME_MAXIMUM_SIZE);
     
     Player player = make_player(name);
-    player.x = COLS / 2;
-    player.y = LINES / 2;
+    player.position.x = COLS / 2;
+    player.position.y = LINES / 2;
     
     BoundingBox box = bounding_box_from_screen();
 

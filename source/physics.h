@@ -24,11 +24,6 @@ void reposition(Player * const player, Platform * const platform, const Bounding
  */
 int is_out_of_bounding_box(Platform * const platform, const BoundingBox * const box);
 
-/**
- * Evaluates whether or not a point is within a Platform.
- */
-int is_within_platform(const int x, const int y, const Platform * const platform);
-
 void update_platform(Player * const player, Platform * const platform, const BoundingBox * const box);
 
 void update_platforms(Game * const game);

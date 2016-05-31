@@ -324,8 +324,8 @@ void print_long_text(char *string) {
 void print_platform(const Platform * const platform, const BoundingBox * const box) {
     int i;
     for (i = 0; i < platform->width; i++) {
-        const int x = platform->x + i;
-        const int y = platform->y;
+        const int x = platform->position.x + i;
+        const int y = platform->position.y;
         if (x >= box->min_x && x <= box->max_x && y >= box->min_y && y <= box->max_y) {
             print(x, y, " ");
         }
@@ -464,7 +464,7 @@ int draw_perk(const Game * const game) {
 
 int draw_player(const Player * const player) {
     attron(COLOR_PAIR(COLOR_PLAYER));
-    print(player->x, player->y, PLAYER_SYMBOL);
+    print(player->position.x, player->position.y, PLAYER_SYMBOL);
     attroff(COLOR_PAIR(COLOR_PLAYER));
     return 0;
 }

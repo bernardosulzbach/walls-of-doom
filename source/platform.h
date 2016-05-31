@@ -3,10 +3,8 @@
 
 
 typedef struct Platform {
-    int x;
-    int y;
-    int speed_x;
-    int speed_y;
+    Vector position;
+    Vector velocity;
     int width;
 } Platform;
 
