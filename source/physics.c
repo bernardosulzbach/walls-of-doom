@@ -6,44 +6,35 @@
 #include <math.h>
 #include <stdio.h>
 
+#define PLATFORM_HEIGHT 1.0
+
 /**
  * Physics calculations are done using floating-point operations.
  *
- * However, representation is discrete and relies on the *truncation* of coordinates.
- *
- * Therefore, two physical bodies will be on the same line if their truncated y values are equal.
+ * However, representation is discrete and relies on the rounding of coordinates.
  */
 
-void log_if_not_normalized(const int value) {
-    if (value < -1 && value > 1) {
-        char buffer[256];
-        char *format = "Expected a normalized value, but got %d instead\n";
-        sprintf(buffer, format, value);
-        log_message(buffer);
-    }
-}
-
 int bounding_box_equals(const BoundingBox * const a, const BoundingBox * const b) {
-    return a->min_x == b->min_x
-        && a->min_y == b->min_y
-        && a->max_x == b->max_x
-        && a->max_y == b->max_y;
+    return a->min_x == b->min_x && a->min_y == b->min_y && a->max_x == b->max_x && a->max_y == b->max_y;
 }
 
 /**
- * Evaluates whether or not two Vectors are on the same row.
- *
- * This is true if, and only if, the integral parts of the parameters are equal.
+ * Evaluates whether or not two double floating-point values are equal taking
+ * the provided threshold into account.
  */
-int are_on_the_same_row(Vector a, Vector b) {
-    return ((long) a.y) == ((long) b.y);
+int double_equals(double a, double b, double epsilon) {
+    return fabs(a - b) < epsilon;
+}
+
+int vector_same_y(Vector a, Vector b) {
+    return double_equals(a.y, b.y, PLATFORM_HEIGHT);
 }
 
 /**
  * Evaluates whether or not a position is within a Platform.
  */
 int is_within_platform(Vector position, const Platform * const platform) {
-    if (are_on_the_same_row(position, platform->position)) {
+    if (vector_same_y(position, platform->position)) {
         if (position.x >= platform->position.x && position.x < platform->position.x + platform->width) {
             return 1;
         }
@@ -60,6 +51,14 @@ int is_over_platform(Vector position, const Platform * const platform) {
 }
 
 /**
+ * Evaluates whether or not a position is under a Platform.
+ */
+int is_under_platform(Vector position, const Platform * const platform) {
+    position.y -= 1.0;
+    return is_within_platform(position, platform);
+}
+
+/**
  * Attempts to force the Player to move according to the provided displacement.
  *
  * If the player does not have physics enabled, this is a no-op.
@@ -70,9 +69,13 @@ void shove_player(Player * const player, const Vector displacement) {
     }
 }
 
+int point_vertically_aligned_with_platform(Vector point, const Platform * const platform) {
+    return point.x >= platform->position.x && point.x < platform->position.x + platform->width;
+}
+
 void move_platform_horizontally(Player * const player, Platform * const platform) {
     const double platform_end_x = platform->position.x + platform->velocity.x;
-    if (player->position.y == platform->position.y) { // Fail fast if the platform and the player are not on the same line
+    if (vector_same_y(player->position, platform->position)) { // Check if the platform and the player are on the same line
         if (platform->velocity.x > 0.0) { // Platform moving to the right
             if (player->position.x > platform->position.x + platform->width) { // Player to the right of the platform
                 if (player->position.x < platform_end_x + platform->width) { // Player should be shoved
@@ -101,26 +104,44 @@ void move_platform_horizontally(Player * const player, Platform * const platform
     platform->position.x += platform->velocity.x;
 }
 
-void move_platform_vertically(Player * const player, Platform * const platform, const int direction) {
-    log_if_not_normalized(direction);
-    if (player->position.x >= platform->position.x && player->position.x < platform->position.x + platform->width) {
-        if (direction == 1) {
-            if (player->position.y == platform->position.y + 1) {
+void move_platform_vertically(Player * const player, Platform * const platform) {
+    if (point_vertically_aligned_with_platform(player->position, platform)) {
+        if (platform->velocity.y < 0.0) { // Platform ascending
+            if (is_over_platform(player->position, platform)) {
                 Vector displacement;
-                displacement.x = 0;
-                displacement.y = 1;
+                displacement.x = 0.0;
+                displacement.y = platform->velocity.y;
                 shove_player(player, displacement);
             }
-        } else if (direction == -1) {
-            if (player->position.y == platform->position.y - 1) {
+        } else if (platform->velocity.y > 0.0) { // Platform descending
+            if (is_under_platform(player->position, platform)) {
                 Vector displacement;
-                displacement.x = 0;
-                displacement.y = -1;
+                displacement.x = 0.0;
+                displacement.y = platform->velocity.y;
                 shove_player(player, displacement);
             }
         }
     }
     platform->position.y += platform->velocity.y;
+}
+
+/**
+ * Evaluates whether or not a Platform is completely outside of a BoundingBox.
+ *
+ * Returns 0 if the platform intersects the bounding box.
+ * Returns 1 if the platform is to the left or to the right of the bounding box.
+ * Returns 2 if the platform is above or below the bounding box.
+ */
+int is_out_of_bounding_box(Platform * const platform, const BoundingBox * const box) {
+    const double min_x = platform->position.x;
+    const double max_x = platform->position.x + platform->width;
+    if (max_x < box->min_x || min_x > box->max_x) {
+        return 1;
+    } else if (platform->position.y < box->min_y || platform->position.y > box->max_y) {
+        return 2;
+    } else {
+        return 0;
+    }
 }
 
 /**
@@ -137,34 +158,15 @@ void reposition(Player * const player, Platform * const platform, const Bounding
         platform->position.x = random_integer(box->min_x, box->max_x);
         // Must work when the player is in the last line
         platform->position.y = box->max_y + 1; // Create it under the bounding box
-        move_platform_vertically(player, platform, -1); // Use the move function to keep the game in a valid state
+        move_platform_vertically(player, platform); // Use the move function to keep the game in a valid state
     }
     // We don't have to deal with platforms below the box.
 }
 
-/**
- * Evaluates whether or not a Platform is completely outside of a BoundingBox.
- *
- * Returns 0 if the platform intersects the bounding box.
- * Returns 1 if the platform is to the left or to the right of the bounding box.
- * Returns 2 if the platform is above or below the bounding box.
- */
-int is_out_of_bounding_box(Platform * const platform, const BoundingBox * const box) {
-    const int min_x = platform->position.x;
-    const int max_x = platform->position.x + platform->width;
-    if (max_x < box->min_x || min_x > box->max_x) {
-        return 1;
-    } else if (platform->position.y < box->min_y || platform->position.y > box->max_y) {
-        return 2;
-    } else {
-        return 0;
-    }
-}
-
 void update_platform(Player * const player, Platform * const platform, const BoundingBox * const box) {
-    int i;
     move_platform_horizontally(player, platform);
-    move_platform_vertically(player, platform, normalize(platform->velocity.y));
+    move_platform_vertically(player, platform);
+    // Lastly, reposition the platform if it is out of the bounding box.
     if (is_out_of_bounding_box(platform, box)) {
         reposition(player, platform, box);
     }
@@ -196,8 +198,8 @@ int is_falling(const Player * const player, const Platform *platforms, const siz
     }
     size_t i;
     for (i = 0; i < platform_count; i++) {
-        if (player->position.y == platforms[i].position.y - 1) {
-            if (player->position.x >= platforms[i].position.x && player->position.x < platforms[i].position.x + platforms[i].width) {
+        if (point_vertically_aligned_with_platform(player->position, platforms + i)) {
+            if (is_over_platform(player->position, platforms + i)) {
                 return 0;
             }
         }
