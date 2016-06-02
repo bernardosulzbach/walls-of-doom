@@ -3,7 +3,7 @@ cmake_minimum_required (VERSION 2.8.7)
 project (walls-of-doom)
 
 set (walls-of-doom_VERSION_MAJOR 0)
-set (walls-of-doom_VERSION_MINOR 5)
+set (walls-of-doom_VERSION_MINOR 6)
 
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
