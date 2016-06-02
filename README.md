@@ -1,5 +1,4 @@
-Walls of Doom
-=============
+# Walls of Doom
 
 # About
 
@@ -79,6 +78,19 @@ that if the program makes use of the I/O capabilities, the calls to initialize()
 and finalize() will also properly initialize and finalize the logger, so
 handling logger initialization and finalization is only required if the I/O
 initialization and finalization are not performed.
+
+## Motion
+
+Motion is based on a speed value of characters per second (CPS for short). An
+object moving at 1 CPS will move (in the direction of the movement) 1 character
+after one second.
+
+We divide the game FPS by the speed to obtain how many frames it takes for the
+object to move one character. The object position then is updated whenever the
+frame count is a multiple of that value.
+
+All physics calculations that cannot be carried out with integer types are done
+using floating point values and rounded to an integer at the end.
 
 ## **insertion-sort.h**
 
