@@ -30,4 +30,6 @@ find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIRS})
 target_link_libraries(walls-of-doom-source ${CURSES_LIBRARIES})
 
+target_link_libraries (walls-of-doom-source m)
+
 target_include_directories (walls-of-doom-source PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

@@ -7,6 +7,7 @@
 #include "player.h"
 #include "rest.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -324,8 +325,8 @@ void print_long_text(char *string) {
 void print_platform(const Platform * const platform, const BoundingBox * const box) {
     int i;
     for (i = 0; i < platform->width; i++) {
-        const int x = platform->position.x + i;
-        const int y = platform->position.y;
+        const int x = round(platform->position.x + i);
+        const int y = round(platform->position.y);
         if (x >= box->min_x && x <= box->max_x && y >= box->min_y && y <= box->max_y) {
             print(x, y, " ");
         }
@@ -464,7 +465,7 @@ int draw_perk(const Game * const game) {
 
 int draw_player(const Player * const player) {
     attron(COLOR_PAIR(COLOR_PLAYER));
-    print(player->position.x, player->position.y, PLAYER_SYMBOL);
+    print(round(player->position.x), round(player->position.y), PLAYER_SYMBOL);
     attroff(COLOR_PAIR(COLOR_PLAYER));
     return 0;
 }
