@@ -19,6 +19,12 @@ This build server uses Ubuntu 14.04 64-bit, CMake 2.8, and GCC 4.8.4.
 
 # Building and Running
 
+The following C compilers are known to work perfectly with the project:
+
++ GCC 4.8
++ GCC 5.3
++ Clang 3.7
+
 ## Terminal
 
 ```bash
