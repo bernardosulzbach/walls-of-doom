@@ -351,7 +351,10 @@ void update_player(Game * const game, const Command command) {
                 player->perk = perk;
                 if (is_bonus_perk(perk)) {
                     conceive_bonus(player, perk);
-                    player->perk_end_frame = game->played_frames; // The perk ends now.
+                    player->perk_end_frame = game->played_frames; // The perk ended now.
+                    // Could set it to the next frame so that the check above
+                    // this part would removed it, but this seems more correct.
+                    player->perk = PERK_NONE;
                 } else {
                     player->perk_end_frame = game->played_frames + PERK_DURATION_ON_PLAYER_IN_FRAMES;
                 }
