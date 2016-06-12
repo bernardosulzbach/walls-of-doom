@@ -16,5 +16,5 @@ void info(void) {
     char buffer[ABOUT_PAGE_BUFFER_SIZE];
     read_characters(ABOUT_PAGE_PATH, buffer, ABOUT_PAGE_BUFFER_SIZE);
     print_long_text(buffer);
-    rest_for_nanoseconds(6UL * NANOSECONDS_IN_ONE_SECOND);
+    rest_for_seconds(6);
 }

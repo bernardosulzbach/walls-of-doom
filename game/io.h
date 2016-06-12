@@ -20,7 +20,7 @@ typedef enum ColorScheme {
     COLOR_SUPER_JUMP,
     COLOR_TIME_STOP,
     COLOR_EXTRA_LIFE,
-    COLOR_EXTRA_POINTS,
+    COLOR_EXTRA_POINTS
 } ColorScheme;
 
 /**

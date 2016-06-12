@@ -68,7 +68,7 @@ void register_score(const Game * const game) {
 
     print_game_result(player->name, player->score, position);
     
-    rest_for_nanoseconds(2UL * NANOSECONDS_IN_ONE_SECOND);
+    rest_for_seconds(2);
 }
 
 /**

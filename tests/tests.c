@@ -81,45 +81,6 @@ void test_trim_string_works_with_strings_of_whitespaces(void) {
     TEST_ASSERT_EQUAL_STRING(expected, buffer);
 }
 
-void test_rest_for_nanoseconds_with_one_microsecond(void) {
-    struct timespec start;
-    struct timespec end;
-
-    clock_gettime(CLOCK_REALTIME, &start);
-    rest_for_nanoseconds(NANOSECONDS_IN_ONE_MICROSECOND);
-    clock_gettime(CLOCK_REALTIME, &end);
-
-    const uint_least64_t elapsed_time = elapsed_time_in_nanoseconds(&start, &end);
-
-    TEST_ASSERT_MESSAGE(elapsed_time >= NANOSECONDS_IN_ONE_MICROSECOND, "elapsed time is less than one microsecond");
-}
-
-void test_rest_for_nanoseconds_with_one_millisecond(void) {
-    struct timespec start;
-    struct timespec end;
-
-    clock_gettime(CLOCK_REALTIME, &start);
-    rest_for_nanoseconds(NANOSECONDS_IN_ONE_MILLISECOND);
-    clock_gettime(CLOCK_REALTIME, &end);
-
-    const uint_least64_t elapsed_time = elapsed_time_in_nanoseconds(&start, &end);
-
-    TEST_ASSERT_MESSAGE(elapsed_time >= NANOSECONDS_IN_ONE_MILLISECOND, "elapsed time is less than one millisecond");
-}
-
-void test_rest_for_nanoseconds_with_one_second(void) {
-    struct timespec start;
-    struct timespec end;
-
-    clock_gettime(CLOCK_REALTIME, &start);
-    rest_for_nanoseconds(NANOSECONDS_IN_ONE_SECOND);
-    clock_gettime(CLOCK_REALTIME, &end);
-
-    const uint_least64_t elapsed_time = elapsed_time_in_nanoseconds(&start, &end);
-
-    TEST_ASSERT_MESSAGE(elapsed_time >= NANOSECONDS_IN_ONE_SECOND, "elapsed time is less than one second");
-}
-
 void test_read_integers(void) {
     char filename[] = "test_read_integers_file.txt";
     FILE *file = fopen(filename, "w+");
@@ -157,7 +118,7 @@ void test_compare_unsigned_char(void) {
 }
 
 void test_insertion_sort_with_empty_range(void) {
-    unsigned char source[] = {};
+    unsigned char source[] = {0};
     insertion_sort(source, 0, sizeof(unsigned char), compare_unsigned_char);
 }
 
@@ -178,7 +139,7 @@ void test_insertion_sort_with_an_even_number_of_single_bytes(void) {
 }
 
 void test_reverse_with_empty_range(void) {
-    unsigned char source[] = {};
+    unsigned char source[] = {0};
     reverse(source, 0, sizeof(unsigned char));
 }
 
@@ -413,9 +374,6 @@ int main(void) {
     RUN_TEST(test_trim_string_properly_trims_trailing_spaces);
     RUN_TEST(test_trim_string_properly_trims_space_padded_strings);
     RUN_TEST(test_trim_string_works_with_strings_of_whitespaces);
-    RUN_TEST(test_rest_for_nanoseconds_with_one_microsecond);
-    RUN_TEST(test_rest_for_nanoseconds_with_one_millisecond);
-    RUN_TEST(test_rest_for_nanoseconds_with_one_second);
     RUN_TEST(test_read_integers);
     RUN_TEST(test_compare_unsigned_char);
     RUN_TEST(test_insertion_sort_with_empty_range);

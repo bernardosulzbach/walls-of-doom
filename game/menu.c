@@ -70,7 +70,7 @@ void top_scores(void) {
         print_centered(y + i, line);
     }
     refresh();
-    rest_for_nanoseconds(2UL * NANOSECONDS_IN_ONE_SECOND);
+    rest_for_seconds(2);
 }
 
 void write_menu(const Menu * const menu) {
