@@ -8,6 +8,11 @@ set (walls-of-doom_VERSION_MINOR 7)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 
+# Even though Clang and GCC seem to require specific flags for ISO C90,
+# preserving this line seems the right thing to do as it may help with
+# unlisted compilers in our conditional chain below.
+set (C_STANDARD 90)
+
 set (CMAKE_BUILD_TYPE Release)
 
 # C standard is enforced with compiler-specific flags.
