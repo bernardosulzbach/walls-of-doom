@@ -2,6 +2,9 @@
 
 NAME="sulzbach-ferrazza.zip"
 HELPER="packaging-helper"
+# Renaming the executable is necessary because the executable `game` conflicts
+# with the path `game` when both are moved to the same directory.
+EXECUTABLE="walls-of-doom"
 
 # Delete the old file if it exists
 rm -f $NAME
@@ -17,7 +20,8 @@ cmake ..
 make
 cd ..
 # Add the executable to the archive
-zip -q -j $NAME $HELPER/game/game
+mv $HELPER/game/game $HELPER/$EXECUTABLE
+zip -q -j $NAME $HELPER/$EXECUTABLE
 # Clean the helper directory up
 rm -rf $HELPER
 
