@@ -88,11 +88,13 @@ void test_read_integers(void) {
     const int expected_count = 1;
     const int expected_value = 65535;
 
+    int actual_values[1];
+    int actual_count;
+
     fprintf(file, "%d", expected_value);
     fflush(file);
 
-    int actual_values[expected_count];
-    const int actual_count = read_integers(filename, actual_values, expected_count);
+    actual_count = read_integers(filename, actual_values, expected_count);
 
     TEST_ASSERT_EQUAL(expected_count, actual_count);
     TEST_ASSERT_EQUAL(expected_value, actual_values[0]);
@@ -356,10 +358,11 @@ void test_random_integer_respects_the_provided_range(void) {
     const int max_max = 4;
     int min;
     int max;
+    int random_result;
     for (min = min_min; min < max_min; min++) {
         for (max = min_max; max < max_max; max++) {
-            int integer = random_integer(min, max);
-            TEST_ASSERT_TRUE(min <= integer && integer <= max);
+            random_result = random_integer(min, max);
+            TEST_ASSERT_TRUE(min <= random_result && random_result <= max);
         }
     }
 }

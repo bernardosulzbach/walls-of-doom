@@ -2,7 +2,7 @@
 
 #include "logger.h"
 
-#include <time.h>
+#include <unistd.h>
 
 #define MICROSECONDS_IN_ONE_SECOND 1000000L
 

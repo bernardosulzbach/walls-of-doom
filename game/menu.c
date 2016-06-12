@@ -18,7 +18,6 @@
 
 #include <curses.h>
 
-#define PLATFORM_BASE_SPEED 2 /* Platforms will get speeds up to 3 times this value */
 #define MAXIMUM_RECORD_ARRAY_SIZE 128
 
 typedef struct Menu {
@@ -104,18 +103,27 @@ void write_menu(const Menu * const menu) {
 int read_platforms(Platform *platforms) {
     const size_t INTEGER_ARRAY_SIZE = 1 + 2 * MAXIMUM_PLATFORM_COUNT;
     int input_integers[INTEGER_ARRAY_SIZE];
-    log_message("Started reading platform data");
-    const size_t actually_read = read_integers("assets/platforms.txt", input_integers, INTEGER_ARRAY_SIZE);
-
+    size_t actually_read;
+    size_t platform_count;
     char log_message_buffer[256];
+    size_t i;
+    int speed;
+    int movement_type;
+
+    log_message("Started reading platform data");
+    actually_read = read_integers("assets/platforms.txt", input_integers, INTEGER_ARRAY_SIZE);
+
     sprintf(log_message_buffer, "Read %lu integers", (unsigned long) actually_read);
     log_message(log_message_buffer);
 
-    const size_t platform_count = input_integers[0] < MAXIMUM_PLATFORM_COUNT ? input_integers[0] : MAXIMUM_PLATFORM_COUNT;
+    if (actually_read > 0) {
+        platform_count = input_integers[0] < MAXIMUM_PLATFORM_COUNT ? input_integers[0] : MAXIMUM_PLATFORM_COUNT;
+    } else {
+        platform_count = 0;
+    }
     sprintf(log_message_buffer, "Platform count is %lu", (unsigned long) platform_count);
     log_message(log_message_buffer);
 
-    size_t i;
     for (i = 0; i < platform_count; i++) {
         Platform *platform = platforms + i;
 
@@ -126,8 +134,8 @@ int read_platforms(Platform *platforms) {
 
         platform->speed_x = 0;
         platform->speed_y = 0;
-        const int speed = input_integers[1 + 2 * i + 1] * PLATFORM_BASE_SPEED;
-        const int movement_type = random_integer(0, 4);
+        speed = input_integers[1 + 2 * i + 1] * PLATFORM_BASE_SPEED;
+        movement_type = random_integer(0, 4);
         if (movement_type < 2) { /* 40% */
             platform->speed_x = speed;
         } else if (movement_type < 4) { /* 40% */
@@ -142,18 +150,23 @@ int read_platforms(Platform *platforms) {
 
 int game(void) {
     char name[PLAYER_NAME_MAXIMUM_SIZE];
+    size_t platform_count;
+    Player player;
+    Platform platforms[MAXIMUM_PLATFORM_COUNT];
+    BoundingBox box;
+    Game game;
+
     read_player_name(name, PLAYER_NAME_MAXIMUM_SIZE);
 
-    Player player = make_player(name);
+    player = make_player(name);
     player.x = COLS / 2;
     player.y = LINES / 2;
 
-    BoundingBox box = bounding_box_from_screen();
+    box = bounding_box_from_screen();
 
-    Platform platforms[MAXIMUM_PLATFORM_COUNT];
-    const size_t platform_count = read_platforms(platforms);
+    platform_count = read_platforms(platforms);
 
-    Game game = create_game(&player, platforms, platform_count, &box);
+    game = create_game(&player, platforms, platform_count, &box);
 
     run_game(&game);
     return 0;

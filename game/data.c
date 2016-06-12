@@ -101,12 +101,14 @@ int read_characters(const char * const filename, char *destination, const size_t
  */
 size_t read_integers(const char * const filename, int *integer_array, const size_t integer_array_size) {
     FILE *file;
-    file = fopen(filename, "r");
     size_t next_index = 0;
-    while (next_index < integer_array_size && fscanf(file, "%d", &integer_array[next_index]) != EOF) {
-        next_index++;
+    file = fopen(filename, "r");
+    if (file) {
+        while (next_index < integer_array_size && fscanf(file, "%d", &integer_array[next_index]) != EOF) {
+            next_index++;
+        }
+        fclose(file);
     }
-    fclose(file);
     return next_index; /* number of elements == index of next element */
 }
 

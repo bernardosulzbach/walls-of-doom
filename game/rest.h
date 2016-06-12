@@ -1,7 +1,6 @@
 #ifndef REST_H
 #define REST_H
 
-#include <time.h>
 #include <stdint.h>
 
 /**
