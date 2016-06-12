@@ -8,16 +8,13 @@ set (walls-of-doom_VERSION_MINOR 7)
 set (CMAKE_INCLUDE_CURRENT_DIR ON)
 set (CMAKE_INCLUDE_CURRENT_DIR_IN_INTERFACE ON)
 
-# The standard is C 90, always.
-set (C_STANDARD 90)
-
 set (CMAKE_BUILD_TYPE Release)
 
-# Based on which compiler we are using, set warning flags
+# C standard is enforced with compiler-specific flags.
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
-    # Clang standard warnings are decent. No need for more.
+    set (CMAKE_C_FLAGS "-std=c89")
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
-    set (CMAKE_C_FLAGS "-Wall -Wextra")
+    set (CMAKE_C_FLAGS "-std=c89 -Wpedantic -Wall -Wextra")
 endif ()
 
 add_subdirectory (unity)
