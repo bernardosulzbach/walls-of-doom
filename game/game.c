@@ -53,15 +53,18 @@ void register_score(const Game * const game) {
     /* Log that we are registering the score */
     char buffer[MAXIMUM_STRING_SIZE];
     const char *format = "Started registering a score of %d points for %s";
+    Record record;
+    int scoreboard_index;
+    int position;
     sprintf(buffer, format, player->score, player->name);
     log_message(buffer);
 
     /* The name has already been entered to make the Player object. */
-    Record record = make_record(player->name, player->score);
+    record = make_record(player->name, player->score);
 
     /* Write the Record to disk */
-    int scoreboard_index = save_record(&record);
-    int position = scoreboard_index + 1;
+    scoreboard_index = save_record(&record);
+    position = scoreboard_index + 1;
 
     sprintf(buffer, "Saved the record successfully");
     log_message(buffer);
@@ -108,9 +111,10 @@ int run_game(Game * const game) {
 }
 
 int main(void) {
+    int result;
     initialize();
     seed_random();
-    int result = main_menu();
+    result = main_menu();
     finalize();
     return result;
 }

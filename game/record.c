@@ -1,13 +1,26 @@
 #include "record.h"
 
+#include "constants.h"
 #include "data.h"
+#include "io.h"
 #include "logger.h"
+#include "rest.h"
 #include "sort.h"
+
+#include "curses.h"
 
 #include <stdio.h>
 #include <string.h>
 
 #define RECORD_ARRAY_SIZE 5
+
+/*
+ * The maximum number of records that will be displayed to the player.
+ *
+ * May be more than the maximum available.
+ */
+#define MAXIMUM_DISPLAYED_RECORDS 64
+
 #define RECORD_TABLE_FILENAME "records.bin"
 
 typedef struct RecordTable {
@@ -68,7 +81,7 @@ void populate_table_with_default_records(RecordTable * table) {
  *
  * If the existing table cannot be used a new one is created.
  */
-void read_table(RecordTable * const table) {
+void read_table(RecordTable * table) {
     int read_error = 0;
     if (file_exists(RECORD_TABLE_FILENAME)) {
         if (read_bytes(RECORD_TABLE_FILENAME, table, sizeof(RecordTable), 1)) {
@@ -82,7 +95,7 @@ void read_table(RecordTable * const table) {
     }
     if (read_error) {
         populate_table_with_default_records(table);
-        log_message("read_table populated the table with the default records");
+        log_message("Populated the table with the default records");
     }
 }
 
@@ -134,11 +147,64 @@ int save_record(const Record * const record) {
  */
 size_t read_records(Record * destination, size_t destination_size) {
     RecordTable table;
-    read_table(&table);
     size_t i;
-    const size_t max_i = destination_size <= table.record_count ? destination_size : table.record_count;
+    size_t max_i;
+    read_table(&table);
+    max_i = table.record_count;
+    if (destination_size < table.record_count) {
+       max_i = destination_size; /* Do not copy more than the caller asked for. */
+    }
     for (i = 0; i < max_i; i++) {
         destination[i] = table.records[i];
     }
     return i;
 }
+
+/**
+ * Returns the number of characters used to represent the provided number on
+ * base 10.
+ */
+int count_digits(int number) {
+    char buffer[MAXIMUM_STRING_SIZE];
+    sprintf(buffer, "%d", number);
+    return strlen(buffer);
+}
+
+void record_to_string(const Record * const record, char *buffer, const int expected_width) {
+    char padding_string[MAXIMUM_STRING_SIZE];
+    memset(padding_string, '.', MAXIMUM_STRING_SIZE - 1);
+    padding_string[MAXIMUM_STRING_SIZE - 1] = '\0';
+    const char format[] = "%s%*.*s%d";
+    int padding_length = expected_width - strlen(record->name) - count_digits(record->score);
+    sprintf(buffer, format, record->name, padding_length, padding_length, padding_string, record->score);
+}
+
+/**
+ * Loads and presents the top scores on the screen.
+ */
+void top_scores(void) {
+    const int line_width = COLS - 6;
+    Record records[MAXIMUM_DISPLAYED_RECORDS];
+    int y = 2;
+    const int line_count = LINES - 2 * y;
+    size_t maximum_read_records = MAXIMUM_DISPLAYED_RECORDS;
+    size_t actually_read_records = read_records(records, maximum_read_records);
+    char line[COLS];
+    size_t i;
+    if (COLS < 16) {
+        return;
+    }
+    if (line_count > MAXIMUM_DISPLAYED_RECORDS) {
+        maximum_read_records = MAXIMUM_DISPLAYED_RECORDS;
+    } else {
+        maximum_read_records = line_count;
+    }
+    clear();
+    for (i = 0; i < actually_read_records; i++) {
+        record_to_string(records + i, line, line_width);
+        print_centered(y + i, line);
+    }
+    refresh();
+    rest_for_seconds(3);
+}
+

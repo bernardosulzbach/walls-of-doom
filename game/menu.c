@@ -18,59 +18,12 @@
 
 #include <curses.h>
 
-#define MAXIMUM_RECORD_ARRAY_SIZE 128
-
 typedef struct Menu {
     char *title;
     char **options;
     size_t option_count;
     size_t selected_option;
 } Menu;
-
-/**
- * Returns the number of characters used to represent the provided number on
- * base 10.
- */
-int count_digits(int number) {
-    char buffer[MAXIMUM_STRING_SIZE];
-    sprintf(buffer, "%d", number);
-    return strlen(buffer);
-}
-
-void record_to_string(const Record * const record, char *buffer, const int expected_width) {
-    char padding_string[MAXIMUM_STRING_SIZE];
-    memset(padding_string, '.', MAXIMUM_STRING_SIZE - 1);
-    padding_string[MAXIMUM_STRING_SIZE - 1] = '\0';
-    const char format[] = "%s%*.*s%d";
-    int padding_length = expected_width - strlen(record->name) - count_digits(record->score);
-    sprintf(buffer, format, record->name, padding_length, padding_length, padding_string, record->score);
-}
-
-void top_scores(void) {
-    if (COLS < 16) {
-        return;
-    }
-    const int line_width = COLS - 6;
-    Record records[MAXIMUM_RECORD_ARRAY_SIZE];
-    int y = 2;
-    const int line_count = LINES - 2 * y;
-    size_t maximum_read_records;
-    if (line_count > MAXIMUM_RECORD_ARRAY_SIZE) {
-        maximum_read_records = MAXIMUM_RECORD_ARRAY_SIZE;
-    } else {
-        maximum_read_records = line_count;
-    }
-    size_t actually_read_records = read_records(records, maximum_read_records);
-    char line[COLS];
-    size_t i;
-    clear();
-    for (i = 0; i < actually_read_records; i++) {
-        record_to_string(records + i, line, line_width);
-        print_centered(y + i, line);
-    }
-    refresh();
-    rest_for_seconds(2);
-}
 
 void write_menu(const Menu * const menu) {
     clear();
@@ -148,6 +101,9 @@ int read_platforms(Platform *platforms) {
     return platform_count;
 }
 
+/**
+ * Enters the game.
+ */
 int game(void) {
     char name[PLAYER_NAME_MAXIMUM_SIZE];
     size_t platform_count;
@@ -173,19 +129,20 @@ int game(void) {
 }
 
 int main_menu(void) {
+    int got_quit = 0;
     Menu menu;
     char title[MAXIMUM_STRING_SIZE];
+    char *options[] = {"Play", "Top Scores", "Info", "Quit"};
+    Command command;
     sprintf(title, "%s version %s", "Walls of Doom", WALLS_OF_DOOM_VERSION);
     menu.title = title;
-    char *options[] = {"Play", "Top Scores", "Info", "Quit"};
     menu.options = options;
     menu.option_count = 4;
     menu.selected_option = 0;
 
-    int got_quit = 0;
     while (!got_quit) {
         write_menu(&menu);
-        Command command = wait_for_next_command();
+        command = wait_for_next_command();
         if (command == COMMAND_UP) {
             if (menu.selected_option > 0) {
                 menu.selected_option--;

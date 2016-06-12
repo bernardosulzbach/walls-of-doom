@@ -37,4 +37,9 @@ int save_record(const Record * const record);
  */
 size_t read_records(Record * destination, size_t destination_size);
 
+/**
+ * Loads and presents the top scores on the screen.
+ */
+void top_scores(void);
+
 #endif
