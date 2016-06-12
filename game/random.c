@@ -36,7 +36,7 @@ void seed_random(void) {
     s[0] = random_time_seed();
 }
 
-static inline uint64_t rotl(const uint64_t x, int k) {
+uint64_t rotl(const uint64_t x, int k) {
     return (x << k) | (x >> (64 - k));
 }
 
@@ -66,7 +66,8 @@ void jump(void) {
     for (i = 0; i < sizeof(JUMP) / sizeof(*JUMP); i++) {
         int b;
         for (b = 0; b < 64; b++) {
-            if (JUMP[i] & 1ULL << b) {
+            /* Was 1ULL, but ISO C90 does not allow it. */
+            if (JUMP[i] & 1UL << b) {
                 s0 ^= s[0];
                 s1 ^= s[1];
             }
@@ -93,7 +94,7 @@ uint64_t find_next_power_of_two(uint64_t number) {
 /**
  * Returns a random number in the range [minimum, maximum].
  */
- int random_integer(const int minimum, const int maximum) {
+int random_integer(const int minimum, const int maximum) {
     const uint64_t range = maximum - minimum + 1;
     const uint64_t next_power_of_two = find_next_power_of_two(range);
     uint64_t value;
