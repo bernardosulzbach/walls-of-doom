@@ -8,7 +8,7 @@
  */
 #define GAME_NAME "Walls of Doom"
 
-#define PLAYER_SYMBOL "@"
+#define PLAYER_SYMBOL "😱"
 
 /**
  * How many strings the top bar has.
