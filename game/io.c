@@ -12,6 +12,7 @@
 #include <string.h>
 #include <ctype.h>
 
+#include <locale.h>
 #include <curses.h>
 
 #define MAXIMUM_LINE_WIDTH 80
@@ -49,6 +50,8 @@ void log_terminal_color_support(void) {
  */
 void initialize(void) {
     initialize_logger();
+    /* Enable wide characters. */
+    setlocale(LC_ALL, "");
     /* Initialize the screen. */
     initscr();
     /* Prevent terminal echo. */

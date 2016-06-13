@@ -25,9 +25,9 @@ add_library (walls-of-doom-source
 
 set_target_properties (walls-of-doom-source PROPERTIES LINKER_LANGUAGE C)
 
-find_package(Curses REQUIRED)
-include_directories(${CURSES_INCLUDE_DIRS})
-target_link_libraries(walls-of-doom-source ${CURSES_LIBRARIES})
+find_package (Ncursesw REQUIRED)
+include_directories (${CURSES_INCLUDE_DIRS})
+target_link_libraries (walls-of-doom-source ${CURSES_LIBRARIES})
 
 target_include_directories (walls-of-doom-source PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -15,6 +15,8 @@ set (C_STANDARD 90)
 
 set (CMAKE_BUILD_TYPE Release)
 
+set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+
 # C standard is enforced with compiler-specific flags.
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
     set (CMAKE_C_FLAGS "-std=c89")
