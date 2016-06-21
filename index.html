@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <title>Walls of Doom by walls-of-doom</title>
+  </head>
+
+  <body>
+
+    <header>
+      <div class="container">
+        <h1>Walls of Doom</h1>
+        <h2>That Minimalistic Platformer</h2>
+
+        <section id="downloads">
+          <a href="https://github.com/walls-of-doom/walls-of-doom/zipball/master" class="btn">Download as .zip</a>
+          <a href="https://github.com/walls-of-doom/walls-of-doom/tarball/master" class="btn">Download as .tar.gz</a>
+          <a href="https://github.com/walls-of-doom/walls-of-doom" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
+        </section>
+      </div>
+    </header>
+
+    <div class="container">
+      <section id="main_content">
+        <h1>
+<a id="walls-of-doom" class="anchor" href="#walls-of-doom" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Walls of Doom</h1>
+
+<h1>
+<a id="about" class="anchor" href="#about" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>About</h1>
+
+<p>Walls of Doom (WoD) is a minimalistic
+<a href="https://en.wikipedia.org/wiki/Platform_game">platformer</a> written in C by
+Bernardo Sulzbach and Leonardo Ferrazza.</p>
+
+<p>See <a href="https://bitbucket.org/mafagafogigante/walls-of-doom/issues?status=new&amp;status=open&amp;sort=-priority">the Bitbucket issue tracker</a>.</p>
+
+<h1>
+<a id="continuous-integration-status" class="anchor" href="#continuous-integration-status" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Continuous Integration Status</h1>
+
+<h2>
+<a id="semaphore-ci" class="anchor" href="#semaphore-ci" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Semaphore CI</h2>
+
+<p>This build server uses Ubuntu 14.04 64-bit, CMake 2.8, and GCC 4.8.4.</p>
+
+<p>The <a href="https://semaphoreci.com/mafagafogigante/walls-of-doom">build status</a> can
+be seen by some developers.</p>
+
+<h1>
+<a id="building-and-running" class="anchor" href="#building-and-running" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building and Running</h1>
+
+<p>The following C compilers are known to work perfectly with the project:</p>
+
+<ul>
+<li>GCC 4.8</li>
+<li>GCC 5.3</li>
+<li>Clang 3.7</li>
+</ul>
+
+<h2>
+<a id="terminal" class="anchor" href="#terminal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Terminal</h2>
+
+<div class="highlight highlight-source-shell"><pre>$ mkdir build
+$ <span class="pl-c1">cd</span> build
+$ cmake ..
+$ make</pre></div>
+
+<h3>
+<a id="running-the-tests" class="anchor" href="#running-the-tests" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running the tests</h3>
+
+<div class="highlight highlight-source-shell"><pre>$ <span class="pl-c1">cd</span> tests
+$ ./tests</pre></div>
+
+<h3>
+<a id="running-the-game" class="anchor" href="#running-the-game" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running the game</h3>
+
+<div class="highlight highlight-source-shell"><pre>$ <span class="pl-c1">cd</span> game
+$ ./game</pre></div>
+
+<h2>
+<a id="codeblocks" class="anchor" href="#codeblocks" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Code::Blocks</h2>
+
+<div class="highlight highlight-source-shell"><pre>$ cmake <span class="pl-c1">.</span> -G<span class="pl-s"><span class="pl-pds">"</span>CodeBlocks - Unix Makefiles<span class="pl-pds">"</span></span></pre></div>
+
+<h3>
+<a id="running-the-tests-1" class="anchor" href="#running-the-tests-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running the tests</h3>
+
+<ul>
+<li>Open Code::Blocks</li>
+<li>Open the Code::Blocks project file on the root directory</li>
+<li>Select <code>autotest</code> as the target</li>
+<li>Press "Build and run"</li>
+</ul>
+
+<h3>
+<a id="running-the-game-1" class="anchor" href="#running-the-game-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running the game</h3>
+
+<ul>
+<li>Open Code::Blocks</li>
+<li>Open the Code::Blocks project file on the root directory</li>
+<li>Select <code>walls-of-doom</code> as the target</li>
+<li>Press "Build and run"</li>
+</ul>
+
+<h1>
+<a id="generating-the-images" class="anchor" href="#generating-the-images" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Generating the Images</h1>
+
+<div class="highlight highlight-source-shell"><pre>$ <span class="pl-c1">cd</span> blender
+$ bash render.sh</pre></div>
+
+<p>And they should be written in to the output subdirectory.</p>
+
+<h2>
+<a id="links" class="anchor" href="#links" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Links</h2>
+
+<p>All these images are posted on the <a href="http://imgur.com/a/kiOY2">Imgur album of the project</a>.</p>
+
+<h1>
+<a id="implementation-notes" class="anchor" href="#implementation-notes" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Implementation Notes</h1>
+
+<h2>
+<a id="io" class="anchor" href="#io" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>IO</h2>
+
+<p>Before using the IO capabilities of Walls of Doom, <code>initialize()</code> must be
+called. Before quitting the game, <code>finalize()</code> must be called to free associated
+resources.</p>
+
+<p>If one must use the logger without initializing the other IO functions, the
+logger module may be independently initialized by calling <code>initialize_logger()</code>
+and finalized by calling <code>finalize_logger()</code>.</p>
+
+<h2>
+<a id="business-logic" class="anchor" href="#business-logic" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Business Logic</h2>
+
+<h3>
+<a id="menu" class="anchor" href="#menu" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Menu</h3>
+
+<p>Under the Menu name is grouped most of the logic that deals with handling user
+interactions outside of the game. This includes menu item selection, the top
+scores functionality and the auxiliary functions of these parts of the
+application.</p>
+
+<h3>
+<a id="physics" class="anchor" href="#physics" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Physics</h3>
+
+<p>The Physics module is where most of the calculations and checks take place.
+Walking, falling, jumping, the fetching of perks, and death are some of the
+things that fall under the scope of this module.</p>
+
+<h2>
+<a id="sorting" class="anchor" href="#sorting" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Sorting</h2>
+
+<p>This project has its own generic insertion sort implementation.</p>
+
+<p>It is a generic function because it uses void pointers and function pointers to
+comparators in order to be reused for different data types without any code
+duplication.</p>
+
+<h2>
+<a id="pseudorandom-number-generator" class="anchor" href="#pseudorandom-number-generator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Pseudorandom Number Generator</h2>
+
+<p>Before using the PRNG, you can initialize it with the current time by calling
+<code>seed_random()</code>.</p>
+
+<p>This project uses the <strong><a href="http://xoroshiro.di.unimi.it/">xoroshiro+</a></strong> algorithm
+to efficiently generate pseudo-random numbers with a big period.</p>
+
+<p>The convenience function that returns an integer in the specified range uses
+multiple random numbers modulo the next power of two to prevent the modulo bias
+that comes with more naive approaches.</p>
+
+<h1>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h1>
+
+<p>It is licensed under the BSD 3-Clause license. See LICENSE.txt for more
+information.</p>
+      </section>
+    </div>
+
+    
+  </body>
+</html>
