@@ -20,56 +20,39 @@
 #define BUY_LIFE_MESSAGE BUY_LIFE_FORMAT(BUY_LIFE_PRICE)
 
 /**
- * Evaluates whether or not a Platform is completely outside of a BoundingBox.
- *
- * Returns 0 if the platform intersects the bounding box.
- * Returns 1 if the platform is to the left or to the right of the bounding box.
- * Returns 2 if the platform is above or below the bounding box.
- */
-int is_out_of_bounding_box(Platform *const platform,
-                           const BoundingBox *const box);
-
-/**
  * Evaluates whether or not a point is within a Platform.
  */
-int is_within_platform(const int x, const int y,
-                       const Platform *const platform);
-
-void update_platform(Game *const game, Platform *const platform);
-
-/**
- * Evaluates whether or not a point is within a Platform.
- */
-int is_within_platform(const int x, const int y,
-                       const Platform *const platform) {
+static int is_within_platform(const int x, const int y,
+                              const Platform *const platform) {
   const int p_min_x = platform->x;
   const int p_max_x = platform->x + platform->width - 1;
   const int p_y = platform->y;
   return y == p_y && x >= p_min_x && x <= p_max_x;
 }
 
-int is_over_platform(const int x, const int y, const Platform *const platform) {
+static int is_over_platform(const int x, const int y,
+                            const Platform *const platform) {
   return is_within_platform(x, y + 1, platform);
 }
 
 /**
- * Moves the player by the provided x and y directions. This moves the player
- * at most one position on each axis.
+ * Evaluates whether or not the given x and y pair is a valid position for the
+ * player to occupy.
  */
-void move_player(Game *game, int x, int y);
-
-/**
- * Attempts to force the Player to move according to the provided displacement.
- *
- * If the player does not have physics enabled, this is a no-op.
- */
-void shove_player(Game *const game, int x, int y) {
-  if (game->player->physics) {
-    if (game->player->perk != PERK_POWER_LEVITATION) {
-      move_player(game, x, 0);
+static int is_valid_move(const Game *const game, const int x, const int y) {
+  if (game->player->perk == PERK_POWER_INVINCIBILITY) {
+    /* If it is invincible, it shouldn't move into walls. */
+    if (game->box->min_x - 1 == x) {
+      return 0;
+    } else if (game->box->max_x + 1 == x) {
+      return 0;
+    } else if (game->box->min_y - 1 == y) {
+      return 0;
+    } else if (game->box->max_y + 1 == y) {
+      return 0;
     }
-    move_player(game, 0, y);
   }
+  return !get_from_rigid_matrix(game, x, y);
 }
 
 /**
@@ -79,7 +62,8 @@ void shove_player(Game *const game, int x, int y) {
  * Speed may be any integer, this function is robust enough to handle
  * nonpositive integers.
  */
-int should_move_at_current_frame(const Game *const game, const int speed) {
+static int should_move_at_current_frame(const Game *const game,
+                                        const int speed) {
   /* Reasoning for rounding a double. */
   /* Let FPS = 30 and speed = 16, if we perform integer division, we will get */
   /* one. This would be much faster than a speed of 16 would actually be as */
@@ -127,19 +111,40 @@ static int can_insert_platform(Game *const game, Platform *const platform) {
  * bottom border to be treated as a platform.
  */
 static int is_standing_on_platform(const Game *const game) {
-  size_t i;
-  Platform *platform;
-  if (game->player->perk == PERK_POWER_INVINCIBILITY &&
-      game->player->y == game->box->max_y) {
-    return 1;
+  if (game->player->y == game->box->max_y) {
+    return game->player->perk == PERK_POWER_INVINCIBILITY;
   }
-  for (i = 0; i < game->platform_count; i++) {
-    platform = game->platforms + i;
-    if (is_over_platform(game->player->x, game->player->y, platform)) {
-      return 1;
+  return get_from_rigid_matrix(game, game->player->x, game->player->y + 1);
+}
+
+/**
+ * Moves the player by the provided x and y directions. This moves the player
+ * at most one position on each axis.
+ */
+static void move_player(Game *game, int x, int y) {
+  /* Ignore magnitude, take just -1, 0, or 1. */
+  /* It is good to reuse these variables to prevent mistakes by having */
+  /* multiple integers for the same axis. */
+  x = normalize(x);
+  y = normalize(y);
+  if (is_valid_move(game, game->player->x + x, game->player->y + y)) {
+    game->player->x += x;
+    game->player->y += y;
+  }
+}
+
+/**
+ * Attempts to force the Player to move according to the provided displacement.
+ *
+ * If the player does not have physics enabled, this is a no-op.
+ */
+static void shove_player(Game *const game, int x, int y) {
+  if (game->player->physics) {
+    if (game->player->perk != PERK_POWER_LEVITATION) {
+      move_player(game, x, 0);
     }
+    move_player(game, 0, y);
   }
-  return 0;
 }
 
 static int can_move_platform(Game *const game, Platform *const platform,
@@ -176,7 +181,8 @@ static void move_platform(Game *const game, Platform *const platform,
   }
 }
 
-void move_platform_horizontally(Game *const game, Platform *const platform) {
+static void move_platform_horizontally(Game *const game,
+                                       Platform *const platform) {
   const int normalized_speed = normalize(platform->speed);
   Player *const player = game->player;
   if (should_move_at_current_frame(game, platform->speed)) {
@@ -359,7 +365,7 @@ int is_out_of_bounding_box(Platform *const platform,
   }
 }
 
-void update_platform(Game *const game, Platform *const platform) {
+static void update_platform(Game *const game, Platform *const platform) {
   move_platform_horizontally(game, platform);
   if (is_out_of_bounding_box(platform, game->box)) {
     reposition(game, platform);
@@ -391,17 +397,18 @@ static int is_falling(const Game *const game) {
   return !get_from_rigid_matrix(game, x, y);
 }
 
-int is_touching_a_wall(const Player *const player,
-                       const BoundingBox *const box) {
-  return (player->x < box->min_x || player->x > box->max_x) ||
-         (player->y < box->min_y || player->y > box->max_y);
+static int is_touching_a_wall(const Player *const player,
+                              const BoundingBox *const box) {
+  const int horizontally = player->x < box->min_x || player->x > box->max_x;
+  const int vertically = player->y < box->min_y || player->y > box->max_y;
+  return horizontally || vertically;
 }
 
-int get_bounding_box_center_x(const BoundingBox *const box) {
+static int get_bounding_box_center_x(const BoundingBox *const box) {
   return box->min_x + (box->max_x - box->min_x + 1) / 2;
 }
 
-int get_bounding_box_center_y(const BoundingBox *const box) {
+static int get_bounding_box_center_y(const BoundingBox *const box) {
   return box->min_y + (box->max_y - box->min_y + 1) / 2;
 }
 
@@ -437,46 +444,6 @@ void update_perk(Game *const game) {
     game->perk_x = random_integer(game->box->min_x, game->box->max_x);
     game->perk_y = random_integer(game->box->min_y, game->box->max_y);
     game->perk_end_frame = game->played_frames + PERK_SCREEN_DURATION_IN_FRAMES;
-  }
-}
-
-/**
- * Evaluates whether or not the given x and y pair is a valid position for the
- * player to occupy.
- */
-int is_valid_move(Game *game, const int x, const int y) {
-  size_t i;
-  if (game->player->perk == PERK_POWER_INVINCIBILITY) {
-    if ((game->box->min_x - 1 == x || game->box->max_x + 1 == x) ||
-        (game->box->min_y - 1 == y || game->box->max_y + 1 == y)) {
-      /* If it is invincible, it shouldn't move into walls. */
-      return 0;
-    }
-  }
-  /* If the player is ascending, skip platform collision check. */
-  if (game->player->x != x || game->player->y != y + 1) {
-    for (i = 0; i < game->platform_count; i++) {
-      if (is_within_platform(x, y, game->platforms + i)) {
-        return 0;
-      }
-    }
-  }
-  return 1;
-}
-
-/**
- * Moves the player by the provided x and y directions. This moves the player
- * at most one position on each axis.
- */
-void move_player(Game *game, int x, int y) {
-  /* Ignore magnitude, take just -1, 0, or 1. */
-  /* It is good to reuse these variables to prevent mistakes by having */
-  /* multiple integers for the same axis. */
-  x = normalize(x);
-  y = normalize(y);
-  if (is_valid_move(game, game->player->x + x, game->player->y + y)) {
-    game->player->x += x;
-    game->player->y += y;
   }
 }
 
@@ -549,7 +516,7 @@ void process_command(Game *game, const Command command) {
 /**
  * Checks if the character should die and kills it if this is the case.
  */
-void check_for_player_death(Game *game) {
+static void check_for_player_death(Game *game) {
   Player *player = game->player;
   BoundingBox *box = game->box;
   /* Kill the player if it is touching a wall. */
