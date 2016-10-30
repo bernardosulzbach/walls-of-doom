@@ -17,7 +17,7 @@ int bounding_box_equals(const BoundingBox *a, const BoundingBox *const b) {
 }
 
 long bounding_box_area(const BoundingBox *box) {
-  long w = box->max_x - box->min_x + 1;
-  long h = box->max_y - box->min_y + 1;
+  const long w = box->max_x - box->min_x + 1;
+  const long h = box->max_y - box->min_y + 1;
   return w * h;
 }
