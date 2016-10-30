@@ -67,8 +67,6 @@ void modify_rigid_matrix_point(const Game *const game, const int x, const int y,
 void modify_rigid_matrix_platform(Game *game, Platform const *platform,
                                   const unsigned char delta);
 
-void print_rigid_matrix(Game *game);
-
 /**
  * Changes the game message to the provided text, for the provided duration.
  *
