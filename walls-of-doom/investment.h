@@ -7,6 +7,4 @@ typedef struct Investment {
   int amount;
 } Investment;
 
-int end_investment(const Investment investment);
-
 #endif

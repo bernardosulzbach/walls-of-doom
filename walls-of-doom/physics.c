@@ -1,4 +1,5 @@
 #include "physics.h"
+#include "bank.h"
 #include "constants.h"
 #include "investment.h"
 #include "limits.h"
@@ -527,7 +528,7 @@ static void update_player_investments(Game *game) {
   Investment *swap;
   Investment *investments = game->player->investments;
   while (investments != NULL && investments->end <= game->played_frames) {
-    game->player->score += end_investment(*investments);
+    game->player->score += collect_investment(game, *investments);
     swap = investments->next;
     resize_memory(investments, 0);
     investments = swap;
