@@ -95,10 +95,16 @@ $ make
 
 > You can pass `-DENV32=1` to CMake to get a 32-bit build on a 64-bit system.
 >
-> You can pass `-DSANITIZE=1` to CMake to get the LLVM undefined behavior sanitizer.
+> Note that to build the 32-bit version, you need 32-bit versions of all the
+> dependencies.
 >
-> Note that in order to build this 32-bit version, you will need the 32-bit
-> versions of all project dependencies.
+> You can pass `-DSANITIZE=1` to CMake to get the LLVM undefined behavior sanitizer.
+
+It is suggested that you pass `-DCMAKE_BUILD_TYPE="Release"` to CMake if you want
+a build to play the game, as it will generate more optimized compiled program.
+
+Additionally, if you want to further make use of compiler optimizations, you can
+pass `-DCMAKE_C_FLAGS="-march=..."` where the ellipsis should be the target architecture.
 
 ## Running the game
 
