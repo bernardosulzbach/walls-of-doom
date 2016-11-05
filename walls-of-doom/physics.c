@@ -64,10 +64,13 @@ void move_player(Game *game, int x, int y);
  * Attempts to force the Player to move according to the provided displacement.
  *
  * If the player does not have physics enabled, this is a no-op.
+ *
+ * The standing flag indicates if the player is standing above the platform.
  */
-void shove_player(Game *const game, int x, int y) {
+static void shove_player(Game *game, int x, int y, int standing) {
   if (game->player->physics) {
-    if (game->player->perk != PERK_POWER_LEVITATION) {
+    /* Don't shove the player if he is hovering over a platform. */
+    if (game->player->perk != PERK_POWER_LEVITATION || !standing) {
       move_player(game, x, 0);
     }
     move_player(game, 0, y);
@@ -187,15 +190,15 @@ void move_platform_horizontally(Game *const game, Platform *const platform) {
       if (player->y == platform->y) {
         if (normalized_speed == 1) {
           if (player->x == platform->x + platform->width) {
-            shove_player(game, 1, 0);
+            shove_player(game, 1, 0, 0);
           }
         } else if (normalized_speed == -1) {
           if (player->x == platform->x - 1) {
-            shove_player(game, -1, 0);
+            shove_player(game, -1, 0, 0);
           }
         }
       } else if (is_over_platform(player->x, player->y, platform)) {
-        shove_player(game, normalized_speed, 0);
+        shove_player(game, normalized_speed, 0, 1);
       }
       move_platform(game, platform, normalized_speed, 0);
     }
