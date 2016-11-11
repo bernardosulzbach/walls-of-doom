@@ -1,7 +1,7 @@
 #ifndef CLOCK_H
 #define CLOCK_H
 
-typedef long Milliseconds;
+typedef unsigned long Milliseconds;
 
 /**
  * Returns a number of milliseconds.
