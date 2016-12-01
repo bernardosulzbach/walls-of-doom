@@ -29,7 +29,6 @@
 #define IMG_FLAGS IMG_INIT_PNG
 
 static TTF_Font *global_monospaced_font = NULL;
-static SDL_Texture *borders_texture = NULL;
 
 /* Default integers to one to prevent divisions by zero. */
 static int bar_height = 1;
@@ -66,11 +65,25 @@ static int get_font_width(void) { return global_monospaced_font_width; }
 
 static int get_font_height(void) { return global_monospaced_font_height; }
 
-static int get_tile_width(void) { return get_window_width() / get_columns(); }
+static int get_tile_width(void) {
+  return get_window_width() / (get_columns() + 2);
+}
 
 static int get_tile_height(void) {
-  return (get_window_height() - get_bar_height()) / get_lines();
+  return (get_window_height() - 2 * get_bar_height()) / (get_lines() + 2);
 }
+
+static int get_border_width(void) {
+  const int center_width = get_window_width();
+  return (center_width - get_columns() * get_tile_width()) / 2;
+}
+
+static int get_border_height(void) {
+  const int center_height = get_window_height() - 2 * get_bar_height();
+  return (center_height - get_lines() * get_tile_height()) / 2;
+}
+
+static int derive_font_size(void) { return (int)(get_bar_height() * 0.6); }
 
 /**
  * Initializes the global fonts.
@@ -82,7 +95,8 @@ static Code initialize_fonts(void) {
     return CODE_OK;
   }
   /* We try to open the font if we need to initialize. */
-  font = TTF_OpenFont(MONOSPACED_FONT_PATH, get_font_size());
+  font = TTF_OpenFont(MONOSPACED_FONT_PATH, derive_font_size());
+  printf("%d\n", derive_font_size());
   /* If it failed, we log an error. */
   if (font == NULL) {
     sprintf(log_buffer, "TTF font opening error: %s", SDL_GetError());
@@ -171,16 +185,6 @@ Code initialize(SDL_Window **window, SDL_Renderer **renderer) {
       return CODE_ERROR;
     }
   }
-  if (initialize_fonts()) {
-    sprintf(log_buffer, "Failed to initialize fonts");
-    log_message(log_buffer);
-    return CODE_ERROR;
-  }
-  if (initialize_font_metrics()) {
-    sprintf(log_buffer, "Failed to initialize font metrics");
-    log_message(log_buffer);
-    return CODE_ERROR;
-  }
   if ((IMG_Init(IMG_FLAGS) & IMG_FLAGS) != IMG_FLAGS) {
     sprintf(log_buffer, "Failed to initialize required image support");
     log_message(log_buffer);
@@ -200,6 +204,16 @@ Code initialize(SDL_Window **window, SDL_Renderer **renderer) {
     log_message(log_buffer);
     return CODE_ERROR;
   }
+  if (initialize_fonts()) {
+    sprintf(log_buffer, "Failed to initialize fonts");
+    log_message(log_buffer);
+    return CODE_ERROR;
+  }
+  if (initialize_font_metrics()) {
+    sprintf(log_buffer, "Failed to initialize font metrics");
+    log_message(log_buffer);
+    return CODE_ERROR;
+  }
   /* Must disable text input to prevent a name capture bug. */
   SDL_StopTextInput();
   set_window_title_and_icon(*window);
@@ -212,11 +226,6 @@ Code initialize(SDL_Window **window, SDL_Renderer **renderer) {
   set_render_color(*renderer, COLOR_DEFAULT_BACKGROUND);
   clear(*renderer);
   return CODE_OK;
-}
-
-static void finalize_cached_textures(void) {
-  SDL_DestroyTexture(borders_texture);
-  borders_texture = NULL;
 }
 
 /**
@@ -235,7 +244,6 @@ static void finalize_fonts(void) {
  * Should only be called once, right before exiting.
  */
 Code finalize(SDL_Window **window, SDL_Renderer **renderer) {
-  finalize_cached_textures();
   finalize_fonts();
   SDL_DestroyRenderer(*renderer);
   SDL_DestroyWindow(*window);
@@ -346,11 +354,6 @@ Code print(const int x, const int y, const char *string,
   return print_absolute(absolute_x, absolute_y, string, color_pair, renderer);
 }
 
-static SDL_Texture *renderable_texture(int w, int h, SDL_Renderer *renderer) {
-  const int access = SDL_TEXTUREACCESS_TARGET;
-  return SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, access, w, h);
-}
-
 static void swap_color(SDL_Renderer *renderer, SDL_Color *color) {
   unsigned char r;
   unsigned char g;
@@ -364,58 +367,54 @@ static void swap_color(SDL_Renderer *renderer, SDL_Color *color) {
   color->a = a;
 }
 
-static Code cache_borders_texture(BoundingBox borders, SDL_Renderer *renderer) {
-  const int min_x = borders.min_x * get_tile_width() + get_tile_width() / 2;
-  const int max_x = borders.max_x * get_tile_width() + get_tile_width() / 2;
-  const int min_y = borders.min_y * get_tile_height() + get_tile_height() / 2;
-  const int max_y = borders.max_y * get_tile_height() + get_tile_height() / 2;
-  const int texture_w = (borders.max_x - borders.min_x + 1) * get_tile_width();
-  const int texture_h = (borders.max_y - borders.min_y + 1) * get_tile_height();
-  SDL_Texture *full_texture;
-  SDL_Color color = to_sdl_color(COLOR_DEFAULT_FOREGROUND);
-  if (borders_texture != NULL) {
-    return CODE_ERROR;
-  }
-  if (min_x < 0 || min_y < 0 || min_x > max_x || min_y > max_y) {
-    log_message("Got invalid border limits");
-    return CODE_ERROR;
-  }
-  /* Create the target texture. */
-  full_texture = renderable_texture(texture_w, texture_h, renderer);
-  if (!full_texture) {
-    log_message("Failed to create cached borders texture");
-    return CODE_ERROR;
-  }
-  /* Change the renderer target to the texture which will be cached. */
-  SDL_SetRenderTarget(renderer, full_texture);
-  SDL_RenderClear(renderer);
-  swap_color(renderer, &color);
-  SDL_RenderDrawLine(renderer, min_x, min_y, max_x, min_y);
-  SDL_RenderDrawLine(renderer, max_x, min_y, max_x, max_y);
-  SDL_RenderDrawLine(renderer, max_x, max_y, min_x, max_y);
-  SDL_RenderDrawLine(renderer, min_x, max_y, min_x, min_y);
-  swap_color(renderer, &color);
-  SDL_SetRenderTarget(renderer, NULL);
-  /* Note that the texture is not destroyed here (obviously). */
-  borders_texture = full_texture;
-  return CODE_OK;
+static SDL_Rect make_top_bar_rectangle(void) {
+  SDL_Rect rectangle;
+  rectangle.x = 0;
+  rectangle.y = get_bar_height();
+  rectangle.w = get_window_width();
+  rectangle.h = get_border_height();
+  return rectangle;
 }
 
-static Code render_borders(BoundingBox borders, SDL_Renderer *renderer) {
-  const int x_step = get_tile_width();
-  const int y_step = get_tile_height();
-  SDL_Rect pos;
-  pos.x = borders.min_x * x_step;
-  pos.y = bar_height + borders.min_y * y_step;
-  if (borders_texture == NULL) {
-    cache_borders_texture(borders, renderer);
-    if (borders_texture == NULL) {
-      /* Failed to cache the texture. */
-      return CODE_ERROR;
-    }
-  }
-  SDL_QueryTexture(borders_texture, NULL, NULL, &pos.w, &pos.h);
-  SDL_RenderCopy(renderer, borders_texture, NULL, &pos);
+static SDL_Rect make_left_bar_rectangle(void) {
+  SDL_Rect rectangle;
+  rectangle.x = 0;
+  rectangle.y = get_bar_height();
+  rectangle.w = get_border_width();
+  rectangle.h = get_window_height() - 2 * get_bar_height();
+  return rectangle;
+}
+
+static SDL_Rect make_right_bar_rectangle(void) {
+  SDL_Rect rectangle;
+  rectangle.x = get_window_width() - get_border_width();
+  rectangle.y = get_bar_height();
+  rectangle.w = get_border_width();
+  rectangle.h = get_window_height() - 2 * get_bar_height();
+  return rectangle;
+}
+
+static SDL_Rect make_bottom_bar_rectangle(void) {
+  SDL_Rect rectangle;
+  rectangle.x = 0;
+  rectangle.y = get_window_height() - get_bar_height() - get_border_height();
+  rectangle.w = get_window_width();
+  rectangle.h = get_border_height();
+  return rectangle;
+}
+
+static Code render_borders(SDL_Renderer *renderer) {
+  const SDL_Rect top_bar = make_top_bar_rectangle();
+  const SDL_Rect left_bar = make_left_bar_rectangle();
+  const SDL_Rect right_bar = make_right_bar_rectangle();
+  const SDL_Rect bottom_bar = make_bottom_bar_rectangle();
+  SDL_Color color = to_sdl_color(COLOR_DEFAULT_FOREGROUND);
+  swap_color(renderer, &color);
+  SDL_RenderFillRect(renderer, &top_bar);
+  SDL_RenderFillRect(renderer, &left_bar);
+  SDL_RenderFillRect(renderer, &right_bar);
+  SDL_RenderFillRect(renderer, &bottom_bar);
+  swap_color(renderer, &color);
   return CODE_OK;
 }
 
@@ -607,8 +606,8 @@ static void draw_absolute_rectangle(const int x, const int y, const int w,
  */
 static void draw_rectangle(int x, int y, int w, int h, Color color,
                            SDL_Renderer *renderer) {
-  x = x * get_tile_width();
-  y = get_bar_height() + y * get_tile_height();
+  x = get_border_width() + x * get_tile_width();
+  y = get_bar_height() + get_border_height() + y * get_tile_height();
   w = w * get_tile_width();
   h = h * get_tile_height();
   draw_absolute_rectangle(x, y, w, h, color, renderer);
@@ -670,14 +669,7 @@ static void draw_bottom_bar(const char *message, SDL_Renderer *renderer) {
 /**
  * Draws the borders of the screen.
  */
-static void draw_borders(SDL_Renderer *renderer) {
-  BoundingBox borders;
-  borders.min_x = 0;
-  borders.max_x = get_columns() - 1;
-  borders.min_y = 0;
-  borders.max_y = get_lines() - 1;
-  render_borders(borders, renderer);
-}
+static void draw_borders(SDL_Renderer *renderer) { render_borders(renderer); }
 
 static void draw_platforms(const Platform *platforms,
                            const size_t platform_count, const BoundingBox *box,

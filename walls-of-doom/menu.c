@@ -72,10 +72,10 @@ void write_menu(const Menu *const menu, SDL_Renderer *renderer) {
 
 static BoundingBox create_bounding_box(void) {
   BoundingBox box;
-  box.min_x = 1;
-  box.min_y = 1;
-  box.max_x = get_columns() - 2;
-  box.max_y = get_lines() - 2;
+  box.min_x = 0;
+  box.min_y = 0;
+  box.max_x = get_columns() - 1;
+  box.max_y = get_lines() - 1;
   return box;
 }
 
