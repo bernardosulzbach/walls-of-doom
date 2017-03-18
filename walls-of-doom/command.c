@@ -1,11 +1,13 @@
 #include "command.h"
 #include "joystick.h"
+#include "logger.h"
 #include <SDL.h>
 
 /**
  * Returns the Command value corresponding to the provided input code.
  */
 static Command command_from_event(const SDL_Event event) {
+  char buffer[256] = {0};
   SDL_Keycode sym;
   Uint16 mod;
   if (event.type == SDL_QUIT) {
@@ -43,6 +45,8 @@ static Command command_from_event(const SDL_Event event) {
   } else if (event.type == SDL_JOYAXISMOTION) {
     return command_from_joystick_event(event);
   } else if (event.type == SDL_JOYBUTTONDOWN) {
+    sprintf(buffer, "Pressed %d", event.jbutton.button);
+    log_message(buffer);
     return command_from_joystick_event(event);
   }
   return COMMAND_NONE;
