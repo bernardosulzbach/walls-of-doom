@@ -7,19 +7,35 @@
 
 #define JOYSTICK_DEAD_ZONE 4096
 
+#define XBOX_A 0
+#define XBOX_B 1
+#define XBOX_X 2
+#define XBOX_Y 3
+#define XBOX_BACK 4
+#define XBOX_GUIDE 5
+#define XBOX_START 6
+#define XBOX_LEFTSTICK 7
+#define XBOX_RIGHTSTICK 8
+#define XBOX_LEFTSHOULDER 9
+#define XBOX_RIGHTSHOULDER 10
+#define XBOX_DPAD_UP 11
+#define XBOX_DPAD_DOWN 12
+#define XBOX_DPAD_LEFT 13
+#define XBOX_DPAD_RIGHT 14
+
 /* DualShock constants. L3 and R3 are the analog sticks pressed down. */
-#define DUALSHOCK_TRIANGLE 0
-#define DUALSHOCK_CIRCLE 1
-#define DUALSHOCK_CROSS 2
-#define DUALSHOCK_SQUARE 3
+#define DUALSHOCK_TRIANGLE XBOX_Y
+#define DUALSHOCK_CIRCLE XBOX_B
+#define DUALSHOCK_CROSS XBOX_A
+#define DUALSHOCK_SQUARE XBOX_X
 #define DUALSHOCK_L1 4
 #define DUALSHOCK_L2 6
 #define DUALSHOCK_L3 10
 #define DUALSHOCK_R1 5
 #define DUALSHOCK_R2 7
 #define DUALSHOCK_R3 11
-#define DUALSHOCK_SELECT 8
-#define DUALSHOCK_START 9
+#define DUALSHOCK_SELECT XBOX_BACK
+#define DUALSHOCK_START XBOX_START
 
 static SDL_Joystick *shared_joystick = NULL;
 
