@@ -527,12 +527,12 @@ void print_long_text(char *string, SDL_Renderer *renderer) {
   SDL_Rect position;
   position.x = get_padding() * font_width;
   position.y = get_padding() * font_width;
-  remove_first_breaks(string);
   clear(renderer);
   /* Validate that the string is not empty and that x and y are nonnegative. */
   if (string == NULL || string[0] == '\0') {
     return;
   }
+  remove_first_breaks(string);
   surface = TTF_RenderText_Blended_Wrapped(font, string, color, width);
   if (surface == NULL) {
     sprintf(log_buffer, CREATE_SURFACE_FAIL, "print_long_text()");
