@@ -35,7 +35,7 @@ void test_resize_memory(void) {
   chunk = resize_memory(chunk, RESIZE_MEMORY_SIZE);
   TEST_ASSERT_TRUE(chunk != NULL);
   /* If allocation worked, we can write to this chunk. */
-  memset(chunk, INT_MAX, RESIZE_MEMORY_SIZE);
+  memset(chunk, 255, RESIZE_MEMORY_SIZE);
   chunk = resize_memory(chunk, 0);
   TEST_ASSERT_TRUE(chunk == NULL);
 }
