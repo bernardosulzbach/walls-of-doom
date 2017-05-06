@@ -85,7 +85,7 @@ void test_get_full_path_checks_for_buffer_overflow(void) {
   char buffer[MAXIMUM_PATH_SIZE];
   char big_filename[MAXIMUM_PATH_SIZE];
   Code code;
-  memset(big_filename, '0', MAXIMUM_PATH_SIZE);
+  memset(big_filename, '\0', MAXIMUM_PATH_SIZE);
   big_filename[MAXIMUM_PATH_SIZE - 1] = '\0';
   code = get_full_path(buffer, big_filename);
   TEST_ASSERT_EQUAL(CODE_ERROR, code);
