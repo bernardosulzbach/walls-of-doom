@@ -1,7 +1,6 @@
 #include "game.hpp"
 #include "analyst.hpp"
 #include "io.hpp"
-#include "memory.hpp"
 #include "record_table.hpp"
 #include "text.hpp"
 #include <cstring>

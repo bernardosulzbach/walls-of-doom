@@ -81,8 +81,6 @@ set(walls-of-doom-sources
         sources/joystick.cpp
         sources/logger.hpp
         sources/logger.cpp
-        sources/memory.hpp
-        sources/memory.cpp
         sources/menu.hpp
         sources/menu.cpp
         sources/numeric.hpp

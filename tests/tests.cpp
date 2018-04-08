@@ -4,7 +4,6 @@
 #include "sources/data.hpp"
 #include "sources/io.hpp"
 #include "sources/logger.hpp"
-#include "sources/memory.hpp"
 #include "sources/numeric.hpp"
 #include "sources/random.hpp"
 #include "sources/sort.hpp"
@@ -26,17 +25,6 @@
 #define WRAP_TEST_WIDTH_20 "assets/tests/wrap-test-width-20.txt"
 #define WRAP_TEST_WIDTH_40 "assets/tests/wrap-test-width-40.txt"
 #define WRAP_TEST_WIDTH_80 "assets/tests/wrap-test-width-80.txt"
-
-TEST_CASE("resize_memory()") {
-  unsigned char *chunk = nullptr;
-  REQUIRE(chunk == NULL);
-  chunk = reinterpret_cast<unsigned char *>(resize_memory(chunk, RESIZE_MEMORY_SIZE));
-  REQUIRE(chunk != NULL);
-  /* If allocation worked, we can write to this chunk. */
-  memset(chunk, 255, RESIZE_MEMORY_SIZE);
-  chunk = reinterpret_cast<unsigned char *>(resize_memory(chunk, 0));
-  REQUIRE(chunk == NULL);
-}
 
 TEST_CASE("normalize()") {
   REQUIRE(-1 == normalize(INT_MIN));
@@ -241,15 +229,12 @@ TEST_CASE("bounding_box_equals()") {
 
 TEST_CASE("generate_platforms() avoids multiple platforms on the same line") {
   const size_t platform_count = 128;
-  int *y_counter = nullptr;
   const BoundingBox empty{0, 0, 0, 0};
-  BoundingBox box;
-  size_t i;
-  int y;
-  y_counter = reinterpret_cast<int *>(resize_memory(y_counter, sizeof(int) * platform_count));
-  for (i = 0; i < platform_count; i++) {
+  std::vector<int> y_counter(platform_count);
+  for (size_t i = 0; i < platform_count; i++) {
     y_counter[i] = 0;
   }
+  BoundingBox box;
   box.min_x = 0;
   box.min_y = 0;
   box.max_x = platform_count - 1;
@@ -257,8 +242,8 @@ TEST_CASE("generate_platforms() avoids multiple platforms on the same line") {
   Settings settings(settings_filename);
   auto platforms = generate_platforms(settings, box, empty, platform_count, 1, 1);
   /* Each platform in platforms should have a different y coordinate. */
-  for (i = 0; i < platform_count; i++) {
-    y = platforms[i].y;
+  for (size_t i = 0; i < platform_count; i++) {
+    const auto y = platforms[i].y;
     /* Casting is safe because y is nonnegative at that point. */
     if (y >= 0 && static_cast<size_t>(y) < platform_count) {
       if (y_counter[y] != 0) {
@@ -270,7 +255,6 @@ TEST_CASE("generate_platforms() avoids multiple platforms on the same line") {
       FAIL("Platform has invalid y coordinate.");
     }
   }
-  resize_memory(y_counter, 0);
 }
 
 TEST_CASE("find_next_power_of_two() works for zero") {
@@ -335,7 +319,7 @@ TEST_CASE("random_integer() is evenly distributed") {
 }
 
 TEST_CASE("select_random_line_blindly() with one empty line") {
-  const int tests = 1 << 8;
+  const int tests = 1000;
   const std::vector<U8> array{0};
   for (int i = 0; i < tests; i++) {
     REQUIRE(0 == select_random_line_blindly(array));
@@ -344,7 +328,7 @@ TEST_CASE("select_random_line_blindly() with one empty line") {
 
 TEST_CASE("select_random_line_blindly() with two empty lines") {
   /* Should not overflow after a multiplication by 3. */
-  const int tests = 1 << 10;
+  const int tests = 10000;
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 0};
   int counters[2] = {0, 0};
@@ -357,8 +341,8 @@ TEST_CASE("select_random_line_blindly() with two empty lines") {
 }
 
 TEST_CASE("select_random_line_blindly() with three empty lines") {
-  const int tests = 1 << 12;
-  const int five_sixteenths = 5 * tests / 16;
+  const auto tests = 10000;
+  const auto five_sixteenths = 5 * tests / 16;
   const std::vector<U8> array{0, 0, 0};
   int counters[3] = {0, 0, 0};
   for (int i = 0; i < tests; i++) {
@@ -371,7 +355,7 @@ TEST_CASE("select_random_line_blindly() with three empty lines") {
 }
 
 TEST_CASE("select_random_line_blindly() with one occupied line") {
-  const int tests = 1 << 8;
+  const auto tests = 10000;
   const std::vector<U8> array{1};
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
@@ -380,8 +364,8 @@ TEST_CASE("select_random_line_blindly() with one occupied line") {
 }
 
 TEST_CASE("select_random_line_blindly() with occupied middle line") {
-  const int tests = 1 << 10;
-  const int seven_sixteenths = 7 * tests / 16;
+  const auto tests = 10000;
+  const auto seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 1, 0};
   int counters[3] = {0, 0, 0};
   for (int i = 0; i < tests; i++) {
@@ -393,7 +377,7 @@ TEST_CASE("select_random_line_blindly() with occupied middle line") {
 }
 
 TEST_CASE("select_random_line_awarely() with one empty line") {
-  const int tests = 1 << 8;
+  const int tests = 1000;
   const std::vector<U8> array{0};
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
@@ -403,7 +387,7 @@ TEST_CASE("select_random_line_awarely() with one empty line") {
 
 TEST_CASE("select_random_line_awarely() with two empty lines") {
   /* Should not overflow after a multiplication by 3. */
-  const int tests = 1 << 10;
+  const int tests = 10000;
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 0};
   int counters[2] = {0, 0};
@@ -416,7 +400,7 @@ TEST_CASE("select_random_line_awarely() with two empty lines") {
 }
 
 TEST_CASE("select_random_line_awarely() with three empty lines") {
-  const int tests = 1 << 10;
+  const int tests = 10000;
   const std::vector<U8> array{0, 0, 0};
   int counters[3] = {0, 0, 0};
   for (int i = 0; i < tests; i++) {
@@ -427,7 +411,7 @@ TEST_CASE("select_random_line_awarely() with three empty lines") {
 }
 
 TEST_CASE("select_random_line_awarely() with one occupied line") {
-  const int tests = 1 << 8;
+  const int tests = 1000;
   const std::vector<U8> array{1};
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
@@ -436,7 +420,7 @@ TEST_CASE("select_random_line_awarely() with one occupied line") {
 }
 
 TEST_CASE("select_random_line_awarely() with occupied middle line") {
-  const int tests = 1 << 10;
+  const int tests = 10000;
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 1, 0};
   int counters[3] = {0, 0, 0};

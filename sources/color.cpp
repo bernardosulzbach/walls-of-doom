@@ -1,5 +1,4 @@
 #include "color.hpp"
-#include "memory.hpp"
 #include "text.hpp"
 #include <SDL.h>
 #include <cstdlib>

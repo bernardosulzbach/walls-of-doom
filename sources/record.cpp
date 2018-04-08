@@ -4,7 +4,6 @@
 #include "data.hpp"
 #include "io.hpp"
 #include "logger.hpp"
-#include "memory.hpp"
 #include "numeric.hpp"
 #include "profiler.hpp"
 #include "settings.hpp"
