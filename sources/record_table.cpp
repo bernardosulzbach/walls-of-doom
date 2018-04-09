@@ -27,7 +27,8 @@ U32 RecordTable::add_record(Record record) {
   if (records.size() > maximum_size) {
     records.pop_back();
   }
-  return static_cast<U32>(std::distance(std::begin(records), std::find(std::begin(records), std::end(records), record)) + 1);
+  const auto distance = std::distance(std::begin(records), std::find(std::begin(records), std::end(records), record));
+  return static_cast<U32>(distance + 1);
 }
 
 void RecordTable::add_record_vector(const std::vector<Record> &new_records) {

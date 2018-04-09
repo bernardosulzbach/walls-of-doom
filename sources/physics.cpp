@@ -296,7 +296,7 @@ static void move_platform_horizontally(Game *const game, Platform *const platfor
   }
 }
 
-int select_random_line_blindly(const std::vector<unsigned char> &lines) {
+int select_random_line_blindly(RandomNumberGenerator &generator, const std::vector<unsigned char> &lines) {
   if (lines.empty()) {
     throw std::logic_error("Empty line vector.");
   }
@@ -309,10 +309,10 @@ int select_random_line_blindly(const std::vector<unsigned char> &lines) {
   }
   /* No empty lines, return any line. */
   if (count == 0) {
-    return random_integer(0, static_cast<int>(lines.size() - 1));
+    return generator.random_integer(0, static_cast<int>(lines.size() - 1));
   }
   /* Get a random value based on the count. */
-  int skip = random_integer(0, count - 1);
+  int skip = generator.random_integer(0, count - 1);
   int line = 0;
   while ((lines[line] != 0) || skip != 0) {
     if (lines[line] == 0) {
@@ -323,7 +323,7 @@ int select_random_line_blindly(const std::vector<unsigned char> &lines) {
   return line;
 }
 
-int select_random_line_awarely(const std::vector<unsigned char> &lines) {
+int select_random_line_awarely(RandomNumberGenerator &generator, const std::vector<unsigned char> &lines) {
   if (lines.empty()) {
     throw std::logic_error("Empty line vector.");
   }
@@ -363,7 +363,7 @@ int select_random_line_awarely(const std::vector<unsigned char> &lines) {
     }
   }
   /* Get a random value based on the count. */
-  int skip = random_integer(0, count - 1);
+  int skip = generator.random_integer(0, count - 1);
   int line = 0;
   while (distances[line] != maximum_distance || skip != 0) {
     if (distances[line] == maximum_distance) {
@@ -390,9 +390,9 @@ static void reposition(Game *const game, Platform *const platform) {
   }
   int line;
   if (game->context.settings.get_reposition_algorithm() == REPOSITION_SELECT_BLINDLY) {
-    line = select_random_line_blindly(occupied);
+    line = select_random_line_blindly(game->context.generator, occupied);
   } else {
-    line = select_random_line_awarely(occupied);
+    line = select_random_line_awarely(game->context.generator, occupied);
   }
   if (platform->x > box.max_x) {
     subtract_platform(game, platform);
@@ -520,19 +520,21 @@ void process_curse(Game *const game, const Perk perk) {
   }
 }
 
-void update_perk(Game *const game) {
-  auto next_perk_frame = game->perk_end_frame;
-  next_perk_frame += game->context.settings.get_perk_interval() * UPS;
-  next_perk_frame -= game->context.settings.get_perk_screen_duration() * UPS;
-  if (game->played_frames == game->perk_end_frame) {
-    game->perk = PERK_NONE;
-  } else if (game->played_frames == next_perk_frame) {
-    game->perk = get_random_perk();
-    game->perk_x = random_integer(0, game->context.settings.get_window_width() - game->context.settings.get_tile_w());
-    const auto bar_height = game->context.settings.get_bar_height();
-    const auto random_y = random_integer(bar_height, game->context.settings.get_window_height() - 2 * bar_height);
-    game->perk_y = random_y - random_y % game->context.settings.get_tile_h();
-    game->perk_end_frame = game->played_frames + game->context.settings.get_perk_screen_duration() * UPS;
+void update_perk(Game &game) {
+  auto next_perk_frame = game.perk_end_frame;
+  const auto &settings = game.context.settings;
+  next_perk_frame += settings.get_perk_interval() * UPS;
+  next_perk_frame -= settings.get_perk_screen_duration() * UPS;
+  if (game.played_frames == game.perk_end_frame) {
+    game.perk = PERK_NONE;
+  } else if (game.played_frames == next_perk_frame) {
+    auto &generator = game.context.generator;
+    game.perk = get_random_perk(generator);
+    game.perk_x = generator.random_integer(0, settings.get_window_width() - settings.get_tile_w());
+    const auto bar_height = settings.get_bar_height();
+    const auto random_y = generator.random_integer(bar_height, settings.get_window_height() - 2 * bar_height);
+    game.perk_y = random_y - random_y % settings.get_tile_h();
+    game.perk_end_frame = game.played_frames + settings.get_perk_screen_duration() * UPS;
   }
 }
 
@@ -549,10 +551,6 @@ void update_player_horizontal_position(Game *game) {
     move_player(game, -1, 0);
     pending_movement++;
   }
-}
-
-static bool is_jumping(const Player *const player) {
-  return player->remaining_jump_height > 0;
 }
 
 void process_jump(Game *const game) {
@@ -639,7 +637,7 @@ static bool can_move_up(const Game *game) {
 void update_player_vertical_position(Game *game) {
   const int jumping_speed = PLAYER_JUMPING_SPEED * game->get_tile_h();
   const int falling_speed = PLAYER_FALLING_SPEED * game->get_tile_h();
-  if (is_jumping(game->player)) {
+  if (game->player->is_jumping()) {
     if (can_move_up(game)) {
       int pending = get_pending_movement(game, jumping_speed);
       while (pending > 0) {

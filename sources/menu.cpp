@@ -42,7 +42,7 @@ void write_menu(const Settings &settings, const Menu &menu, SDL_Renderer *render
 
 Code game(Context &context, SDL_Renderer *renderer, CommandTable *table) {
   std::string name;
-  Code code = read_player_name(context.settings, name, renderer);
+  Code code = read_player_name(context, name, renderer);
   if (code == CODE_QUIT || code == CODE_CLOSE) {
     return code;
   }

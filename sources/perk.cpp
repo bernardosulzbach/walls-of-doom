@@ -2,8 +2,8 @@
 #include "logger.hpp"
 #include "random.hpp"
 
-Perk get_random_perk() {
-  return static_cast<Perk>(random_integer(0, PERK_COUNT - 1));
+Perk get_random_perk(RandomNumberGenerator &generator) {
+  return static_cast<Perk>(generator.random_integer(0, PERK_COUNT - 1));
 }
 
 bool is_bonus_perk(Perk perk) {

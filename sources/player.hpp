@@ -40,6 +40,10 @@ public:
   void increment_score(Score amount);
   void decrement_score(Score amount);
   void increment_score_from_event(float rarity);
+
+  inline bool is_jumping() const {
+    return remaining_jump_height > 0;
+  }
 };
 
 #endif

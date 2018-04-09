@@ -2,6 +2,7 @@
 #define PLATFORM_H
 
 #include "box.hpp"
+#include "context.hpp"
 #include "integers.hpp"
 #include "settings.hpp"
 #include <vector>
@@ -19,6 +20,6 @@ public:
   bool operator!=(const Platform &rhs) const;
 };
 
-std::vector<Platform> generate_platforms(const Settings &settings, BoundingBox box, BoundingBox avoidance, U64 count);
+std::vector<Platform> generate_platforms(const Context &context, BoundingBox box, BoundingBox avoidance, U64 count);
 
 #endif

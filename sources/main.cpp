@@ -40,17 +40,17 @@ int main(int argc, char *argv[]) {
     return result;
   }
   try {
-    seed_random();
+    RandomNumberGenerator generator(3456661261407373589);
     Profiler profiler(true);
     Settings settings(settings_filename);
     SDL_Window *window;
     SDL_Renderer *renderer;
     initialize(settings, &window, &renderer);
-    Context context(settings, profiler);
+    Context context(settings, profiler, generator);
     result = main_menu(context, renderer);
     finalize(&window, &renderer);
   } catch (std::exception &exception) {
-    std::cout << "Exception!" << ' ' << exception.what() << '\n';
+    std::cout << "Caught an exception." << ' ' << exception.what() << '\n';
   }
   return result;
 }

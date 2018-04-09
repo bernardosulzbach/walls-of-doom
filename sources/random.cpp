@@ -7,33 +7,27 @@
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
+#include <iostream>
 #include <stdexcept>
 
 static const char *const NAME_FILE_PATH = "data/name.txt";
 
-/* These state variables must be initialized so that they are not all zero. */
-static U64 x;
-static U64 y;
-static U64 z;
-static U64 w;
+RandomNumberGenerator::RandomNumberGenerator(U64 seed) : x(seed) {
+}
 
-static U64 xorshift128() {
+U64 RandomNumberGenerator::xorshift128() {
   U64 t = x;
-  t ^= t << 11;
-  t ^= t >> 8;
+  t ^= t << 11u;
+  t ^= t >> 8u;
   x = y;
   y = z;
   z = w;
-  w ^= w >> 19;
+  w ^= w >> 19u;
   w ^= t;
   return w;
 }
 
-void seed_random() {
-  x = static_cast<decltype(x)>(time(nullptr));
-}
-
-U64 find_next_power_of_two(U64 number) {
+U64 RandomNumberGenerator::find_next_power_of_two(U64 number) {
   U64 result = 1;
   while (number != 0) {
     number >>= 1;
@@ -42,8 +36,10 @@ U64 find_next_power_of_two(U64 number) {
   return result;
 }
 
-S32 random_integer(const S32 minimum, const S32 maximum) {
+S32 RandomNumberGenerator::random_integer(const S32 minimum, const S32 maximum) {
+  calls++;
   if (maximum < minimum) {
+    bad_calls++;
     return 0;
   }
   const auto range = static_cast<U64>(maximum) - minimum + 1;
@@ -61,7 +57,7 @@ S32 random_integer(const S32 minimum, const S32 maximum) {
   return static_cast<S32>(minimum + value);
 }
 
-static std::string random_word(const std::string &filename) {
+std::string RandomNumberGenerator::random_word(const std::string &filename) {
   int read = '\0';
   int chosen_line;
   int current_line;
@@ -92,7 +88,7 @@ static std::string random_word(const std::string &filename) {
   return destination;
 }
 
-static std::string get_stored_name() {
+std::string RandomNumberGenerator::get_stored_name() {
   std::string destination;
   Code code = read_characters(NAME_FILE_PATH, destination);
   if (code != CODE_OK) {
@@ -101,16 +97,7 @@ static std::string get_stored_name() {
   return destination;
 }
 
-static bool has_stored_name() {
-  try {
-    get_stored_name();
-    return true;
-  } catch (std::exception &exception) {
-    return false;
-  }
-}
-
-static std::string get_random_name() {
+std::string RandomNumberGenerator::get_random_name() {
   auto a = random_word(ADJECTIVES_FILE_PATH);
   auto b = random_word(NOUNS_FILE_PATH);
   a[0] = static_cast<char>(std::toupper(a[0]));
@@ -118,9 +105,18 @@ static std::string get_random_name() {
   return a + b;
 }
 
-std::string get_user_name() {
-  if (has_stored_name()) {
+std::string RandomNumberGenerator::get_user_name() {
+  try {
     return get_stored_name();
+  } catch (std::exception &exception) {
+    return get_random_name();
   }
-  return get_random_name();
+}
+
+U64 RandomNumberGenerator::get_calls() const {
+  return calls;
+}
+
+U64 RandomNumberGenerator::get_bad_calls() const {
+  return bad_calls;
 }

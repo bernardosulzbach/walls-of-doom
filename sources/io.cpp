@@ -340,7 +340,8 @@ void print_long_text(const Settings &settings, char *string, Renderer *renderer)
 /**
  * Prints the provided strings centered at the specified absolute line.
  */
-static Code print_centered_horizontally(const Settings &settings, const std::vector<std::string> &strings, const ColorPair color, Renderer *renderer, const int y) {
+static Code print_centered_horizontally(const Settings &settings, const std::vector<std::string> &strings,
+                                        const ColorPair color, Renderer *renderer, const int y) {
   char log_buffer[MAXIMUM_STRING_SIZE];
   const SDL_Color foreground = color.foreground.to_SDL_color();
   const SDL_Color background = color.background.to_SDL_color();
@@ -384,7 +385,8 @@ static Code print_centered_horizontally(const Settings &settings, const std::vec
 /**
  * Prints the provided strings centered in the middle of the screen.
  */
-Code print_centered_vertically(const Settings &settings, const std::vector<std::string> &strings, ColorPair color, Renderer *renderer) {
+Code print_centered_vertically(const Settings &settings, const std::vector<std::string> &strings, ColorPair color,
+                               Renderer *renderer) {
   const int text_line_height = global_monospaced_font_height;
   const int padding = 2 * settings.get_padding() * global_monospaced_font_height;
   const int available_window_height = settings.get_window_height() - padding;
@@ -411,18 +413,18 @@ static bool is_valid_player_name(const std::string &player_name) {
  *
  * Returns a Code, which may indicate that the player tried to quit.
  */
-Code read_player_name(const Settings &settings, std::string &destination, Renderer *renderer) {
+Code read_player_name(const Context &context, std::string &destination, Renderer *renderer) {
   Code code = CODE_ERROR;
   bool valid_name = false;
   const char message[] = "Name your character: ";
-  destination = get_user_name();
+  destination = context.generator.get_user_name();
   /* While there is not a read error or a valid name. */
   std::vector<char> name(maximum_player_name_size);
   copy_string(name.data(), destination.c_str(), maximum_player_name_size);
   while (code != CODE_OK || !valid_name) {
-    auto x = settings.get_padding() * get_font_width();
-    auto y = (settings.get_window_height() - get_font_height()) / 2;
-    code = read_string(settings, x, y, message, name.data(), maximum_player_name_size, renderer);
+    auto x = context.settings.get_padding() * get_font_width();
+    auto y = (context.settings.get_window_height() - get_font_height()) / 2;
+    code = read_string(context.settings, x, y, message, name.data(), maximum_player_name_size, renderer);
     if (code == CODE_QUIT) {
       return CODE_QUIT;
     }
@@ -482,14 +484,16 @@ static void draw_absolute_tile_rectangle(const Settings &settings, int x, int y,
   draw_absolute_rectangle(x, y, w, h, color, renderer);
 }
 
-static void draw_shaded_absolute_tile_rectangle(const Settings &settings, int x, int y, Color color, Renderer *renderer) {
+static void draw_shaded_absolute_tile_rectangle(const Settings &settings, int x, int y, Color color,
+                                                Renderer *renderer) {
   const int w = settings.get_tile_w();
   const int h = settings.get_tile_h();
   y += settings.get_bar_height();
   draw_shaded_absolute_rectangle(x, y, w, h, color, renderer);
 }
 
-static void write_top_bar_strings(const Settings &settings, const std::vector<std::string> &strings, Renderer *renderer) {
+static void write_top_bar_strings(const Settings &settings, const std::vector<std::string> &strings,
+                                  Renderer *renderer) {
   const ColorPair color_pair = COLOR_PAIR_TOP_BAR;
   const int y = (settings.get_bar_height() - get_font_height()) / 2;
   int h = settings.get_bar_height();
@@ -542,7 +546,8 @@ static Color get_platform_color(Platform platform) {
   return COLOR_PAIR_PLATFORM_A.foreground.mix(COLOR_PAIR_PLATFORM_B.foreground, platform.rarity);
 }
 
-static void draw_platforms(const Settings &settings, const std::vector<Platform> &platforms, BoundingBox box, Renderer *renderer) {
+static void draw_platforms(const Settings &settings, const std::vector<Platform> &platforms, BoundingBox box,
+                           Renderer *renderer) {
   const auto y_padding = settings.get_bar_height();
   for (const auto &platform : platforms) {
     auto p = platform;
@@ -766,7 +771,8 @@ static void print_limited(const int x, const int y, const char *string, const si
 /**
  * Reads a string from the user of up to size characters (including NUL).
  */
-Code read_string(const Settings &settings, const int x, const int y, const char *prompt, char *destination, const size_t size, Renderer *renderer) {
+Code read_string(const Settings &settings, const int x, const int y, const char *prompt, char *destination,
+                 const size_t size, Renderer *renderer) {
   const int buffer_x = x + (strlen(prompt) + 1) * get_font_width();
   const int padding_size = settings.get_padding() * get_font_width();
   const int buffer_view_size = settings.get_window_width() - buffer_x - padding_size;

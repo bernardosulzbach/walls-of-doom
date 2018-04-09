@@ -1,6 +1,7 @@
 #ifndef PERK_H
 #define PERK_H
 
+#include "random.hpp"
 #include <string>
 
 enum Perk {
@@ -17,7 +18,7 @@ enum Perk {
   PERK_NONE
 };
 
-Perk get_random_perk();
+Perk get_random_perk(RandomNumberGenerator &generator);
 
 bool is_bonus_perk(Perk perk);
 

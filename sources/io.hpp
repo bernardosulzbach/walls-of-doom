@@ -51,21 +51,23 @@ Code finalize(Window **window, Renderer **renderer);
 
 Code print_absolute(int x, int y, const char *string, ColorPair color, Renderer *renderer);
 
-Code print_centered_vertically(const Settings &settings, const std::vector<std::string> &strings, ColorPair color, Renderer *renderer);
+Code print_centered_vertically(const Settings &settings, const std::vector<std::string> &strings, ColorPair color,
+                               Renderer *renderer);
 
 /**
  * Reads a string from the user of up to size characters (including NUL).
  *
  * The string will be echoed after the prompt, which starts at (x, y).
  */
-Code read_string(const Settings &settings, int x, int y, const char *prompt, char *destination, size_t size, Renderer *renderer);
+Code read_string(const Settings &settings, int x, int y, const char *prompt, char *destination, size_t size,
+                 Renderer *renderer);
 
 /**
  * Attempts to read a player name.
  *
  * Returns a Code, which may indicate that the player tried to quit.
  */
-Code read_player_name(const Settings &settings, std::string &destination, Renderer *renderer);
+Code read_player_name(const Context &context, std::string &destination, Renderer *renderer);
 
 /**
  * Draws a full game to the screen.

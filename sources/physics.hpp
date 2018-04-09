@@ -17,18 +17,18 @@ static const int EXTRA_POINTS_AMOUNT = 1000;
  *
  * This algorithm is O(n) with respect to the number of lines.
  */
-int select_random_line_blindly(const std::vector<unsigned char> &lines);
+int select_random_line_blindly(RandomNumberGenerator &generator, const std::vector<unsigned char> &lines);
 
 /**
  * Selects at random one of the lines which are the furthest away from any other occupied line.
  *
  * This algorithm is O(n) with respect to the number of lines.
  */
-int select_random_line_awarely(const std::vector<unsigned char> &lines);
+int select_random_line_awarely(RandomNumberGenerator &generator, const std::vector<unsigned char> &lines);
 
 void update_platforms(Game *const game);
 
-void update_perk(Game *const game);
+void update_perk(Game &game);
 
 void update_player(Game *game, Player *player);
 

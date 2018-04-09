@@ -30,7 +30,7 @@ Game::Game(Context &context, Player *player) : context(context), player(player) 
   reposition_player(this);
 
   const BoundingBox avoidance{player->x, player->y, player->x + player->w, player->y + player->h};
-  platforms = generate_platforms(context.settings, box, avoidance, context.settings.get_platform_count());
+  platforms = generate_platforms(context, box, avoidance, context.settings.get_platform_count());
 
   current_frame = 0;
   desired_frame = 0;
@@ -64,7 +64,7 @@ Milliseconds update_game(Game &game) {
     game.message[0] = '\0';
   }
   update_platforms(&game);
-  update_perk(&game);
+  update_perk(game);
   game.context.profiler.stop();
   return get_milliseconds() - game_update_start;
 }
@@ -86,7 +86,8 @@ void game_set_message(Game *const game, const char *message, const U64 duration,
   }
 }
 
-static void print_game_result(const Settings &settings, const Player *player, const U32 position, SDL_Renderer *renderer) {
+static void print_game_result(const Settings &settings, const Player *player, const U32 position,
+                              SDL_Renderer *renderer) {
   const auto name = player->name;
   const Score score = player->score;
   const ColorPair color = COLOR_PAIR_DEFAULT;
