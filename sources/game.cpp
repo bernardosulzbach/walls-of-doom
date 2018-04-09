@@ -14,28 +14,23 @@ static const Milliseconds milliseconds_in_a_second = 1000;
 static const int maximum_fps = 250;
 
 static void initialize_rigid_matrix(Game *game) {
-  for (size_t i = 0; i < game->platform_count; i++) {
+  for (size_t i = 0; i < game->platforms.size(); i++) {
     modify_rigid_matrix_platform(game, game->platforms.data() + i, 1);
   }
 }
 
-Game::Game(Player *player, const Settings *settings, Profiler *profiler) : player(player), settings(settings), profiler(profiler) {
-  tile_w = settings->get_tile_w();
-  tile_h = settings->get_tile_h();
-
-  platform_count = settings->get_platform_count();
-
+Game::Game(Context &context, Player *player) : context(context), player(player) {
   box.min_x = 0;
   box.min_y = 0;
-  box.max_x = settings->get_window_width();
-  box.max_y = settings->get_window_height() - 2 * settings->get_bar_height();
+  box.max_x = context.settings.get_window_width();
+  box.max_y = context.settings.get_window_height() - 2 * context.settings.get_bar_height();
 
-  player->w = tile_w;
-  player->h = tile_h;
+  player->w = get_tile_w();
+  player->h = get_tile_h();
   reposition_player(this);
 
   const BoundingBox avoidance{player->x, player->y, player->x + player->w, player->y + player->h};
-  platforms = generate_platforms(*settings, box, avoidance, platform_count, tile_w, tile_h);
+  platforms = generate_platforms(context.settings, box, avoidance, context.settings.get_platform_count());
 
   current_frame = 0;
   desired_frame = 0;
@@ -47,7 +42,7 @@ Game::Game(Player *player, const Settings *settings, Profiler *profiler) : playe
   perk_x = 0;
   perk_y = 0;
   /* Don't start with a Perk on the screen. */
-  perk_end_frame = static_cast<U64>(settings->get_perk_screen_duration() * UPS);
+  perk_end_frame = context.settings.get_perk_screen_duration() * UPS;
 
   rigid_matrix_m = static_cast<size_t>(box.max_y - box.min_y + 1);
   rigid_matrix_n = static_cast<size_t>(box.max_x - box.min_x + 1);
@@ -61,16 +56,16 @@ Game::Game(Player *player, const Settings *settings, Profiler *profiler) : playe
   log_message("Finished creating the game.");
 }
 
-Milliseconds update_game(Game *const game) {
+Milliseconds update_game(Game &game) {
   Milliseconds game_update_start;
-  game->profiler->start("update_game");
+  game.context.profiler.start("update_game");
   game_update_start = get_milliseconds();
-  if (game->message_end_frame < game->current_frame) {
-    game->message[0] = '\0';
+  if (game.message_end_frame < game.current_frame) {
+    game.message[0] = '\0';
   }
-  update_platforms(game);
-  update_perk(game);
-  game->profiler->stop();
+  update_platforms(&game);
+  update_perk(&game);
+  game.context.profiler.stop();
   return get_milliseconds() - game_update_start;
 }
 
@@ -124,10 +119,10 @@ Code register_score(const Game *const game, SDL_Renderer *renderer) {
   sprintf(buffer, format, player->score, player->name.c_str(), renderer);
   log_message(buffer);
   log_message("Saved the record successfully.");
-  print_game_result(*game->settings, player, position, renderer);
+  print_game_result(game->context.settings, player, position, renderer);
   const Milliseconds release_time = get_milliseconds() + register_score_release_delay;
   Code code = CODE_OK;
-  while ((code = wait_for_input(*game->settings, game->player->table)) == CODE_OK) {
+  while ((code = wait_for_input(game->context.settings, game->player->table)) == CODE_OK) {
     if (get_milliseconds() > release_time) {
       break;
     }
@@ -160,7 +155,7 @@ Code run_game(Game *const game, SDL_Renderer *renderer) {
     }
     if (game->paused) {
       draw_game(game, renderer);
-      read_commands(*game->settings, game->player->table);
+      read_commands(game->context.settings, game->player->table);
       if (test_command_table(game->player->table, COMMAND_CLOSE, REPETITION_DELAY)) {
         code = CODE_CLOSE;
       }
@@ -173,12 +168,12 @@ Code run_game(Game *const game, SDL_Renderer *renderer) {
       continue;
     }
     while (game->current_frame < game->desired_frame) {
-      update_game(game);
+      update_game(*game);
       update_player(game, game->player);
       game->current_frame++;
     }
     draw_game(game, renderer);
-    read_commands(*game->settings, game->player->table);
+    read_commands(game->context.settings, game->player->table);
     if (test_command_table(game->player->table, COMMAND_PAUSE, REPETITION_DELAY)) {
       game->paused = true;
     }

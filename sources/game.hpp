@@ -5,6 +5,7 @@
 #include "clock.hpp"
 #include "code.hpp"
 #include "constants.hpp"
+#include "context.hpp"
 #include "integers.hpp"
 #include "logger.hpp"
 #include "numeric.hpp"
@@ -20,15 +21,11 @@
 
 class Game {
 public:
+  Context &context;
+
   Player *player;
 
-  const Settings *settings;
-
-  Profiler *profiler;
-
   std::vector<Platform> platforms;
-
-  size_t platform_count;
 
   U64 current_frame;
   U64 desired_frame;
@@ -40,29 +37,36 @@ public:
   bool paused = false;
   bool debugging = false;
 
-  int tile_w;
-  int tile_h;
-
   Perk perk;
+
   int perk_x;
   int perk_y;
+
   U64 perk_end_frame;
 
   BoundingBox box;
 
   size_t rigid_matrix_n;
   size_t rigid_matrix_m;
-  size_t rigid_matrix_size{};
+
   std::vector<U8> rigid_matrix;
 
   char message[MAXIMUM_STRING_SIZE]{};
   U64 message_end_frame;
   unsigned int message_priority;
 
-  Game(Player *player, const Settings *settings, Profiler *profiler);
+  Game(Context &context, Player *player);
+
+  inline S32 get_tile_w() const {
+    return context.settings.get_tile_w();
+  }
+
+  inline S32 get_tile_h() const {
+    return context.settings.get_tile_h();
+  }
 };
 
-Milliseconds update_game(Game *const game);
+Milliseconds update_game(Game &game);
 
 inline size_t get_rigid_matrix_index(const Game *const game, const int x, const int y) {
   const int base_x = x - game->box.min_x;

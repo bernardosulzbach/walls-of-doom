@@ -17,8 +17,8 @@ static BoundingBox derive_box(const Game *game, const int x, const int y) {
   BoundingBox box;
   box.min_x = x;
   box.min_y = y;
-  box.max_x = box.min_x + game->tile_w - 1;
-  box.max_y = box.min_y + game->tile_h - 1;
+  box.max_x = box.min_x + game->get_tile_w() - 1;
+  box.max_y = box.min_y + game->get_tile_h() - 1;
   return box;
 }
 
@@ -95,8 +95,8 @@ static void move_player(Game *game, int dx, int dy) {
 }
 
 static bool can_move_player_without_intersecting(Game *game, int dx, int dy) {
-  const S32 tile_w = game->settings->get_tile_w();
-  const S32 tile_h = game->settings->get_tile_h();
+  const S32 tile_w = game->context.settings.get_tile_w();
+  const S32 tile_h = game->context.settings.get_tile_h();
   for (auto x = game->player->x + dx; x < game->player->x + dx + tile_w; x++) {
     for (auto y = game->player->y + dy; y < game->player->y + dy + tile_h; y++) {
       if (get_from_rigid_matrix(game, x, y) != 0u) {
@@ -199,7 +199,7 @@ static bool is_in_front_of_platform(const Player *const player, const Platform *
 }
 
 static bool can_move_platform(Game *const game, Platform *p, int dx, int dy) {
-  if (game->settings->get_player_stops_platforms() && is_over_platform(game->player, p)) {
+  if (game->context.settings.get_player_stops_platforms() && is_over_platform(game->player, p)) {
     return false;
   }
   if (dx == 0 && dy == 0) {
@@ -377,19 +377,19 @@ int select_random_line_awarely(const std::vector<unsigned char> &lines) {
 static void reposition(Game *const game, Platform *const platform) {
   const auto box = game->box;
   // The occupied size may be smaller than the array actually is.
-  const auto settings = game->settings;
-  const auto bar_height = settings->get_bar_height();
-  const auto tile_h = game->tile_h;
-  const auto occupied_size = static_cast<U32>((settings->get_window_height() - 2 * bar_height) / tile_h);
+  const auto &settings = game->context.settings;
+  const auto bar_height = settings.get_bar_height();
+  const auto tile_h = game->get_tile_h();
+  const auto occupied_size = static_cast<U32>((settings.get_window_height() - 2 * bar_height) / tile_h);
   std::vector<U8> occupied(occupied_size);
   /* Build a table of occupied rows. */
-  for (size_t i = 0; i < game->platform_count; i++) {
+  for (size_t i = 0; i < game->platforms.size(); i++) {
     if (game->platforms[i] != *platform) {
       occupied[(game->platforms[i].y - box.min_y) / tile_h] = 1;
     }
   }
   int line;
-  if (game->settings->get_reposition_algorithm() == REPOSITION_SELECT_BLINDLY) {
+  if (game->context.settings.get_reposition_algorithm() == REPOSITION_SELECT_BLINDLY) {
     line = select_random_line_blindly(occupied);
   } else {
     line = select_random_line_awarely(occupied);
@@ -437,7 +437,7 @@ static void update_platform(Game *const game, Platform *const platform) {
 
 void update_platforms(Game *const game) {
   if (game->player->perk != PERK_POWER_TIME_STOP) {
-    for (size_t i = 0; i < game->platform_count; i++) {
+    for (size_t i = 0; i < game->platforms.size(); i++) {
       update_platform(game, game->platforms.data() + i);
     }
   }
@@ -500,7 +500,7 @@ static void reverse_platform(Platform *const platform) {
 }
 
 static void apply_to_platforms(Game *const game, void (*f)(Platform *const)) {
-  for (size_t i = 0; i != game->platform_count; ++i) {
+  for (size_t i = 0; i != game->platforms.size(); ++i) {
     f(game->platforms.data() + i);
   }
 }
@@ -522,17 +522,17 @@ void process_curse(Game *const game, const Perk perk) {
 
 void update_perk(Game *const game) {
   auto next_perk_frame = game->perk_end_frame;
-  next_perk_frame += game->settings->get_perk_interval() * UPS;
-  next_perk_frame -= game->settings->get_perk_screen_duration() * UPS;
+  next_perk_frame += game->context.settings.get_perk_interval() * UPS;
+  next_perk_frame -= game->context.settings.get_perk_screen_duration() * UPS;
   if (game->played_frames == game->perk_end_frame) {
     game->perk = PERK_NONE;
   } else if (game->played_frames == next_perk_frame) {
     game->perk = get_random_perk();
-    game->perk_x = random_integer(0, game->settings->get_window_width() - game->settings->get_tile_w());
-    const auto bar_height = game->settings->get_bar_height();
-    const auto random_y = random_integer(bar_height, game->settings->get_window_height() - 2 * bar_height);
-    game->perk_y = random_y - random_y % game->settings->get_tile_h();
-    game->perk_end_frame = game->played_frames + game->settings->get_perk_screen_duration() * UPS;
+    game->perk_x = random_integer(0, game->context.settings.get_window_width() - game->context.settings.get_tile_w());
+    const auto bar_height = game->context.settings.get_bar_height();
+    const auto random_y = random_integer(bar_height, game->context.settings.get_window_height() - 2 * bar_height);
+    game->perk_y = random_y - random_y % game->context.settings.get_tile_h();
+    game->perk_end_frame = game->played_frames + game->context.settings.get_perk_screen_duration() * UPS;
   }
 }
 
@@ -556,7 +556,7 @@ static bool is_jumping(const Player *const player) {
 }
 
 void process_jump(Game *const game) {
-  const int jumping_height = game->tile_h * PLAYER_JUMPING_HEIGHT;
+  const int jumping_height = game->get_tile_h() * PLAYER_JUMPING_HEIGHT;
   if (is_standing_on_platform(game)) {
     game->player->remaining_jump_height = jumping_height;
     if (game->player->perk == PERK_POWER_SUPER_JUMP) {
@@ -582,11 +582,11 @@ static void buy_life(Game *game) {
 void process_command(Game *game, Player *player) {
   double *table = player->table->status;
   if (table[COMMAND_LEFT] != 0.0) {
-    double speed = -table[COMMAND_LEFT] * PLAYER_RUNNING_SPEED * game->tile_w;
+    double speed = -table[COMMAND_LEFT] * PLAYER_RUNNING_SPEED * game->get_tile_w();
     player->speed_x = static_cast<int>(speed);
     player->physics = true;
   } else if (table[COMMAND_RIGHT] != 0.0) {
-    double speed = table[COMMAND_RIGHT] * PLAYER_RUNNING_SPEED * game->tile_w;
+    double speed = table[COMMAND_RIGHT] * PLAYER_RUNNING_SPEED * game->get_tile_w();
     player->speed_x = static_cast<int>(speed);
     player->physics = true;
   } else {
@@ -625,7 +625,7 @@ static bool can_move_up(const Game *game) {
   if (y == game->box.min_y) {
     return true;
   }
-  for (S32 i = 0; i < static_cast<S32>(game->settings->get_tile_w()); i++) {
+  for (S32 i = 0; i < static_cast<S32>(game->context.settings.get_tile_w()); i++) {
     if (get_from_rigid_matrix(game, x + i, y - 1) != 0u) {
       return false;
     }
@@ -637,8 +637,8 @@ static bool can_move_up(const Game *game) {
  * Updates the vertical position of the player.
  */
 void update_player_vertical_position(Game *game) {
-  const int jumping_speed = PLAYER_JUMPING_SPEED * game->tile_h;
-  const int falling_speed = PLAYER_FALLING_SPEED * game->tile_h;
+  const int jumping_speed = PLAYER_JUMPING_SPEED * game->get_tile_h();
+  const int falling_speed = PLAYER_FALLING_SPEED * game->get_tile_h();
   if (is_jumping(game->player)) {
     if (can_move_up(game)) {
       int pending = get_pending_movement(game, jumping_speed);
@@ -741,7 +741,7 @@ static void update_player_perk(Game *game) {
           /* this part would removed it, but this seems more correct. */
           player->perk = PERK_NONE;
         } else {
-          end_frame = game->played_frames + game->settings->get_perk_screen_duration() * UPS;
+          end_frame = game->played_frames + game->context.settings.get_perk_screen_duration() * UPS;
           player->perk_end_frame = end_frame;
         }
         write_got_perk_message(game, perk);
@@ -755,9 +755,9 @@ static void update_player_graphics(Game *game) {
 }
 
 void update_player(Game *game, Player *player) {
-  game->profiler->start("update_player");
+  game->context.profiler.start("update_player");
   if (player->physics) {
-    log_player_score(*game->settings, game->played_frames, player->score);
+    log_player_score(game->context.settings, game->played_frames, player->score);
   }
   update_player_graphics(game);
   update_player_perk(game);
@@ -781,5 +781,5 @@ void update_player(Game *game, Player *player) {
       }
     }
   }
-  game->profiler->stop();
+  game->context.profiler.stop();
 }

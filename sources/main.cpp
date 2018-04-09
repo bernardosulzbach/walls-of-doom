@@ -41,11 +41,13 @@ int main(int argc, char *argv[]) {
   }
   try {
     seed_random();
+    Profiler profiler(true);
     Settings settings(settings_filename);
     SDL_Window *window;
     SDL_Renderer *renderer;
     initialize(settings, &window, &renderer);
-    result = main_menu(settings, renderer);
+    Context context(settings, profiler);
+    result = main_menu(context, renderer);
     finalize(&window, &renderer);
   } catch (std::exception &exception) {
     std::cout << "Exception!" << ' ' << exception.what() << '\n';

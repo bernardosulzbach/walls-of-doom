@@ -109,7 +109,9 @@ set(walls-of-doom-sources
         sources/text.cpp
         sources/version.hpp
         sources/record_table.cpp
-        sources/record_table.hpp)
+        sources/record_table.hpp
+        sources/context.cpp
+        sources/context.hpp)
 
 add_library(walls-of-doom-object OBJECT ${walls-of-doom-sources})
 

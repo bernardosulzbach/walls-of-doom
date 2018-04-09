@@ -40,18 +40,18 @@ void write_menu(const Settings &settings, const Menu &menu, SDL_Renderer *render
   print_menu(settings, string_vector, renderer);
 }
 
-Code game(const Settings &settings, Profiler *profiler, SDL_Renderer *renderer, CommandTable *table) {
+Code game(Context &context, SDL_Renderer *renderer, CommandTable *table) {
   std::string name;
-  Code code = read_player_name(settings, name, renderer);
+  Code code = read_player_name(context.settings, name, renderer);
   if (code == CODE_QUIT || code == CODE_CLOSE) {
     return code;
   }
   Player player(name, table);
-  Game game(&player, &settings, profiler);
+  Game game(context, &player);
   return run_game(&game, renderer);
 }
 
-int main_menu(const Settings &settings, SDL_Renderer *renderer) {
+int main_menu(Context &context, SDL_Renderer *renderer) {
   auto should_quit = false;
   Code code = CODE_OK;
   Menu menu;
@@ -63,10 +63,9 @@ int main_menu(const Settings &settings, SDL_Renderer *renderer) {
   menu.title = title;
   menu.options = options;
   menu.selected_option = 0;
-  Profiler profiler(true);
   while (!should_quit) {
-    write_menu(settings, menu, renderer);
-    read_commands(settings, &command_table);
+    write_menu(context.settings, menu, renderer);
+    read_commands(context.settings, &command_table);
     const auto got_up = test_command_table(&command_table, COMMAND_UP, REPETITION_DELAY);
     const auto got_down = test_command_table(&command_table, COMMAND_DOWN, REPETITION_DELAY);
     const auto got_enter = test_command_table(&command_table, COMMAND_ENTER, REPETITION_DELAY);
@@ -85,11 +84,11 @@ int main_menu(const Settings &settings, SDL_Renderer *renderer) {
       }
     } else if (got_enter || got_center) {
       if (menu.selected_option == 0) {
-        code = game(settings, &profiler, renderer, &command_table);
+        code = game(context, renderer, &command_table);
       } else if (menu.selected_option == 1) {
-        code = top_scores(settings, profiler, renderer, &command_table);
+        code = top_scores(context.settings, context.profiler, renderer, &command_table);
       } else if (menu.selected_option == 2) {
-        code = info(settings, renderer, &command_table);
+        code = info(context.settings, renderer, &command_table);
       } else if (menu.selected_option == 3) {
         should_quit = true;
       }
@@ -101,6 +100,6 @@ int main_menu(const Settings &settings, SDL_Renderer *renderer) {
     should_quit = should_quit || test_command_table(&command_table, COMMAND_QUIT, REPETITION_DELAY);
   }
   auto full_path = get_full_path(profiler_filename);
-  write_string(full_path.c_str(), profiler.dump());
+  write_string(full_path.c_str(), context.profiler.dump());
   return 0;
 }

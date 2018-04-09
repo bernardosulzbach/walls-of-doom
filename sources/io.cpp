@@ -599,7 +599,7 @@ static void draw_active_perk(const Settings &settings, const Game *const game, R
   const double fraction = std::min(interval, remaining) / static_cast<double>(interval);
   const int x = game->perk_x;
   const int y = y_padding + game->perk_y;
-  draw_resized_perk(x, y, game->tile_w, game->tile_h, fraction, renderer);
+  draw_resized_perk(x, y, game->get_tile_w(), game->get_tile_h(), fraction, renderer);
 }
 
 static void draw_perk(const Settings &settings, const Game *const game, Renderer *renderer) {
@@ -640,42 +640,44 @@ static void draw_debugging(const Settings &settings, Game *const game, Renderer 
  */
 Milliseconds draw_game(Game *const game, Renderer *renderer) {
   Milliseconds draw_game_start = get_milliseconds();
-  const auto &settings = *game->settings;
-  game->profiler->start("draw_game");
+  const auto &settings = game->context.settings;
+  auto &profiler = game->context.profiler;
 
-  game->profiler->start("clear");
+  profiler.start("draw_game");
+
+  profiler.start("clear");
   clear(renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->start("draw_top_bar");
+  profiler.start("draw_top_bar");
   draw_top_bar(settings, game, renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->start("draw_bottom_bar");
+  profiler.start("draw_bottom_bar");
   draw_bottom_bar(settings, game->message, renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->start("draw_platforms");
+  profiler.start("draw_platforms");
   draw_platforms(settings, game->platforms, game->box, renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->start("draw_perk");
+  profiler.start("draw_perk");
   draw_perk(settings, game, renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->start("draw_player");
+  profiler.start("draw_player");
   draw_player(settings, game->player, renderer);
-  game->profiler->stop();
+  profiler.stop();
 
   if (game->debugging) {
     draw_debugging(settings, game, renderer);
   }
 
-  game->profiler->start("present");
+  profiler.start("present");
   present(renderer);
-  game->profiler->stop();
+  profiler.stop();
 
-  game->profiler->stop();
+  profiler.stop();
   return get_milliseconds() - draw_game_start;
 }
 
