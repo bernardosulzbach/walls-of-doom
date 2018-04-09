@@ -5,7 +5,7 @@
 #include <string>
 
 /**
- * Seeds the PRNG with the current time.
+ * Seeds the number generator with the current time.
  *
  * This function can safely be called multiple times.
  */
@@ -19,7 +19,7 @@ U64 find_next_power_of_two(U64 number);
 /**
  * Returns a random number in the range [minimum, maximum].
  */
-int random_integer(int minimum, int maximum);
+S32 random_integer(S32 minimum, S32 maximum);
 
 std::string get_user_name();
 

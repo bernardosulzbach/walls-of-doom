@@ -9,8 +9,6 @@
 #include <ctime>
 #include <stdexcept>
 
-#define MAXIMUM_WORD_SIZE 32
-
 static const char *const NAME_FILE_PATH = "data/name.txt";
 
 /* These state variables must be initialized so that they are not all zero. */
@@ -21,7 +19,6 @@ static U64 w;
 
 static U64 xorshift128() {
   U64 t = x;
-  /* Left shif overflow is undefined behavior in C. */
   t ^= t << 11;
   t ^= t >> 8;
   x = y;
@@ -33,38 +30,25 @@ static U64 xorshift128() {
 }
 
 void seed_random() {
-  /* If tloc is a null pointer, no value is stored. */
-  x = static_cast<long>(time(nullptr));
+  x = static_cast<decltype(x)>(time(nullptr));
 }
 
-/**
- * Returns the next power of two bigger than the provided number.
- */
 U64 find_next_power_of_two(U64 number) {
   U64 result = 1;
-  while (number != 0u) {
+  while (number != 0) {
     number >>= 1;
     result <<= 1;
   }
   return result;
 }
 
-/**
- * Returns a random number in the range [minimum, maximum].
- *
- * Always returns 0 if maximum < minimum.
- */
-int random_integer(const int minimum, const int maximum) {
-  /* Range should be a bigger type because the difference may overflow int. */
-  U64 range;
-  U64 next_power_of_two;
-  U64 value;
+S32 random_integer(const S32 minimum, const S32 maximum) {
   if (maximum < minimum) {
     return 0;
   }
-  /* This never overflows, even when int and long have the same size. */
-  range = maximum - minimum + 1;
-  next_power_of_two = find_next_power_of_two(range);
+  const auto range = static_cast<U64>(maximum) - minimum + 1;
+  const auto next_power_of_two = find_next_power_of_two(range);
+  U64 value;
   do {
     value = xorshift128() % next_power_of_two;
   } while (value >= range);
@@ -74,12 +58,9 @@ int random_integer(const int minimum, const int maximum) {
    * to
    *   minimum + (maximum - minimum + 1 - 1) == maximum
    */
-  return minimum + value;
+  return static_cast<S32>(minimum + value);
 }
 
-/**
- * Returns the first word of a random line of the file.
- */
 static std::string random_word(const std::string &filename) {
   int read = '\0';
   int chosen_line;
@@ -132,8 +113,8 @@ static bool has_stored_name() {
 static std::string get_random_name() {
   auto a = random_word(ADJECTIVES_FILE_PATH);
   auto b = random_word(NOUNS_FILE_PATH);
-  a[0] = toupper(a[0]);
-  b[0] = toupper(b[0]);
+  a[0] = static_cast<char>(std::toupper(a[0]));
+  b[0] = static_cast<char>(std::toupper(b[0]));
   return a + b;
 }
 
