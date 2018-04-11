@@ -1,6 +1,7 @@
 #include "game.hpp"
 #include "analyst.hpp"
 #include "io.hpp"
+#include "physics.hpp"
 #include "record_table.hpp"
 #include "text.hpp"
 #include <cstring>
@@ -30,7 +31,9 @@ Game::Game(Context &context, Player *player) : context(context), player(player) 
   reposition_player(this);
 
   const BoundingBox avoidance{player->x, player->y, player->x + player->w, player->y + player->h};
-  platforms = generate_platforms(context, box, avoidance, context.settings.get_platform_count());
+  const S32 width = context.settings.get_tile_w();
+  const S32 height = context.settings.get_tile_h();
+  platforms = generate_platforms(context, {box, avoidance, width, height, context.settings.get_platform_count()});
 
   current_frame = 0;
   desired_frame = 0;
@@ -86,8 +89,7 @@ void game_set_message(Game *const game, const char *message, const U64 duration,
   }
 }
 
-static void print_game_result(const Settings &settings, const Player *player, const U32 position,
-                              SDL_Renderer *renderer) {
+static void print_game_result(Renderer &renderer, const Player *player, const U32 position) {
   const auto name = player->name;
   const Score score = player->score;
   const ColorPair color = COLOR_PAIR_DEFAULT;
@@ -104,26 +106,26 @@ static void print_game_result(const Settings &settings, const Player *player, co
   lines.emplace_back(first_line);
   lines.emplace_back(empty_line);
   lines.emplace_back(second_line);
-  clear(renderer);
-  print_centered_vertically(settings, lines, color, renderer);
-  present(renderer);
+  renderer.clear();
+  renderer.print_centered_vertically(lines, color);
+  renderer.present();
 }
 
-Code register_score(const Game *const game, SDL_Renderer *renderer) {
-  const Player *const player = game->player;
+Code register_score(Renderer &renderer, Game &game) {
+  const Player *const player = game.player;
   char buffer[MAXIMUM_STRING_SIZE];
   const char *format = "Started registering a score of %d points for %s.";
   RecordTable table(default_record_table_size);
   table.load(default_record_table_filename);
   const auto position = table.add_record(Record(player->name.c_str(), player->score));
   table.dump(default_record_table_filename);
-  sprintf(buffer, format, player->score, player->name.c_str(), renderer);
+  sprintf(buffer, format, player->score, player->name.c_str());
   log_message(buffer);
   log_message("Saved the record successfully.");
-  print_game_result(game->context.settings, player, position, renderer);
+  print_game_result(renderer, player, position);
   const Milliseconds release_time = get_milliseconds() + register_score_release_delay;
   Code code = CODE_OK;
-  while ((code = wait_for_input(game->context.settings, game->player->table)) == CODE_OK) {
+  while ((code = wait_for_input(game.context.settings, player->table)) == CODE_OK) {
     if (get_milliseconds() > release_time) {
       break;
     }
@@ -134,52 +136,52 @@ Code register_score(const Game *const game, SDL_Renderer *renderer) {
 /**
  * Runs the main game loop for the Game object and registers the player score.
  */
-Code run_game(Game *const game, SDL_Renderer *renderer) {
-  log_message("Started running a game of difficulty " + double_to_string(get_difficulty(*game), 4) + ".");
+Code run_game(Renderer &renderer, Game &game) {
+  log_message("Started running a game of difficulty " + double_to_string(get_difficulty(game), 4) + ".");
   const Milliseconds frame_interval = milliseconds_in_a_second / maximum_fps;
   const Milliseconds logic_interval = milliseconds_in_a_second / UPS;
   Milliseconds start_time = 0;
   Milliseconds time_since_last_logic_update = 0;
   Code code = CODE_OK;
-  int *lives = &game->player->lives;
-  U64 limit = game->limit_played_frames;
+  int *lives = &game.player->lives;
+  U64 limit = game.limit_played_frames;
   CommandTable table{};
   initialize_command_table(&table);
-  while ((game->player->table->status[COMMAND_QUIT] == 0.0) && *lives != 0 && game->played_frames < limit) {
+  while ((game.player->table->status[COMMAND_QUIT] == 0.0) && *lives != 0 && game.played_frames < limit) {
     start_time = get_milliseconds();
     if (time_since_last_logic_update >= 2 * logic_interval) {
       std::cerr << "Skipped a frame!" << '\n';
     }
     while (time_since_last_logic_update > logic_interval) {
       time_since_last_logic_update -= logic_interval;
-      game->desired_frame++;
+      game.desired_frame++;
     }
-    if (game->paused) {
-      draw_game(game, renderer);
-      read_commands(game->context.settings, game->player->table);
-      if (test_command_table(game->player->table, COMMAND_CLOSE, REPETITION_DELAY)) {
+    if (game.paused) {
+      renderer.draw_game(game);
+      read_commands(game.context.settings, game.player->table);
+      if (test_command_table(game.player->table, COMMAND_CLOSE, REPETITION_DELAY)) {
         code = CODE_CLOSE;
       }
-      if (test_command_table(game->player->table, COMMAND_QUIT, REPETITION_DELAY)) {
+      if (test_command_table(game.player->table, COMMAND_QUIT, REPETITION_DELAY)) {
         code = CODE_QUIT;
       }
-      if (test_command_table(game->player->table, COMMAND_PAUSE, REPETITION_DELAY)) {
-        game->paused = false;
+      if (test_command_table(game.player->table, COMMAND_PAUSE, REPETITION_DELAY)) {
+        game.paused = false;
       }
       continue;
     }
-    while (game->current_frame < game->desired_frame) {
-      update_game(*game);
-      update_player(game, game->player);
-      game->current_frame++;
+    while (game.current_frame < game.desired_frame) {
+      update_game(game);
+      update_player(&game, game.player);
+      game.current_frame++;
     }
-    draw_game(game, renderer);
-    read_commands(game->context.settings, game->player->table);
-    if (test_command_table(game->player->table, COMMAND_PAUSE, REPETITION_DELAY)) {
-      game->paused = true;
+    renderer.draw_game(game);
+    read_commands(game.context.settings, game.player->table);
+    if (test_command_table(game.player->table, COMMAND_PAUSE, REPETITION_DELAY)) {
+      game.paused = true;
     }
-    if (test_command_table(game->player->table, COMMAND_DEBUG, REPETITION_DELAY)) {
-      game->debugging = !game->debugging;
+    if (test_command_table(game.player->table, COMMAND_DEBUG, REPETITION_DELAY)) {
+      game.debugging = !game.debugging;
     }
     const auto time_since_last_frame_update = get_milliseconds() - start_time;
     if (time_since_last_frame_update < frame_interval) {
@@ -188,7 +190,7 @@ Code run_game(Game *const game, SDL_Renderer *renderer) {
     time_since_last_logic_update += get_milliseconds() - start_time;
   }
   if (code != CODE_CLOSE) {
-    code = register_score(game, renderer);
+    code = register_score(renderer, game);
   }
   if (code == CODE_QUIT) {
     /* When the player quits from the game, it should go back to the menu. */

@@ -9,7 +9,7 @@ class Context {
 public:
   Settings &settings;
   Profiler &profiler;
-  RandomNumberGenerator &generator;
+  RandomNumberGenerator &random_number_generator;
   Context(Settings &settings, Profiler &profiler, RandomNumberGenerator &generator);
 };
 

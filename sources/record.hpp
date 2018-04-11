@@ -3,7 +3,6 @@
 
 #include "code.hpp"
 #include "constants.hpp"
-#include "game.hpp"
 #include "player.hpp"
 #include <SDL.h>
 #include <cstdlib>

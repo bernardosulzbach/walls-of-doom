@@ -31,27 +31,27 @@ public:
 /**
  * Writes the provided Menu for the user.
  */
-void write_menu(const Settings &settings, const Menu &menu, SDL_Renderer *renderer) {
+void write_menu(Renderer &renderer, const Menu &menu) {
   std::vector<std::string> string_vector;
   string_vector.emplace_back(game_name);
   string_vector.insert(std::end(string_vector), std::begin(menu.options), std::end(menu.options));
   const auto selected_option_index = menu.selected_option + 1;
   string_vector[selected_option_index] = "> " + string_vector[selected_option_index] + " <";
-  print_menu(settings, string_vector, renderer);
+  renderer.print_menu(string_vector);
 }
 
-Code game(Context &context, SDL_Renderer *renderer, CommandTable *table) {
+Code game(Context &context, Renderer &renderer, CommandTable *table) {
   std::string name;
-  Code code = read_player_name(context, name, renderer);
+  Code code = renderer.read_player_name(name);
   if (code == CODE_QUIT || code == CODE_CLOSE) {
     return code;
   }
   Player player(name, table);
   Game game(context, &player);
-  return run_game(&game, renderer);
+  return run_game(renderer, game);
 }
 
-int main_menu(Context &context, SDL_Renderer *renderer) {
+int main_menu(Context &context, Renderer &renderer) {
   auto should_quit = false;
   Code code = CODE_OK;
   Menu menu;
@@ -64,7 +64,7 @@ int main_menu(Context &context, SDL_Renderer *renderer) {
   menu.options = options;
   menu.selected_option = 0;
   while (!should_quit) {
-    write_menu(context.settings, menu, renderer);
+    write_menu(renderer, menu);
     read_commands(context.settings, &command_table);
     const auto got_up = test_command_table(&command_table, COMMAND_UP, REPETITION_DELAY);
     const auto got_down = test_command_table(&command_table, COMMAND_DOWN, REPETITION_DELAY);
@@ -86,7 +86,7 @@ int main_menu(Context &context, SDL_Renderer *renderer) {
       if (menu.selected_option == 0) {
         code = game(context, renderer, &command_table);
       } else if (menu.selected_option == 1) {
-        code = top_scores(context.settings, context.profiler, renderer, &command_table);
+        code = renderer.top_scores(&command_table);
       } else if (menu.selected_option == 2) {
         code = info(context.settings, renderer, &command_table);
       } else if (menu.selected_option == 3) {

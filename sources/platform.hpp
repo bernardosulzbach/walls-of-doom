@@ -20,6 +20,17 @@ public:
   bool operator!=(const Platform &rhs) const;
 };
 
-std::vector<Platform> generate_platforms(const Context &context, BoundingBox box, BoundingBox avoidance, U64 count);
+class PlatformRules {
+public:
+  const BoundingBox box;
+  const BoundingBox avoidance;
+  const S32 width;
+  const S32 height;
+  const U64 count;
+
+  PlatformRules(const BoundingBox &box, const BoundingBox &avoidance, S32 width, S32 height, U64 count);
+};
+
+std::vector<Platform> generate_platforms(const Context &context, PlatformRules rules);
 
 #endif

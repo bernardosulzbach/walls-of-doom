@@ -5,6 +5,7 @@
 #include "sources/io.hpp"
 #include "sources/logger.hpp"
 #include "sources/numeric.hpp"
+#include "sources/physics.hpp"
 #include "sources/random.hpp"
 #include "sources/sort.hpp"
 #include "sources/text.hpp"
@@ -49,10 +50,10 @@ TEST_CASE("get_random_perk() is well distributed") {
   int count;
   int i;
 
-  seed_random();
+  RandomNumberGenerator generator(default_random_number_generator_seed);
 
   for (i = 0; i < test_count; i++) {
-    counters[get_random_perk()]++;
+    counters[get_random_perk(generator)]++;
   }
   /* Assess the distribution of the values. */
   for (i = 0; i < PERK_COUNT; i++) {
@@ -240,7 +241,10 @@ TEST_CASE("generate_platforms() avoids multiple platforms on the same line") {
   box.max_x = platform_count - 1;
   box.max_y = platform_count - 1;
   Settings settings(settings_filename);
-  auto platforms = generate_platforms(settings, box, empty, platform_count, 1, 1);
+  Profiler profiler(false);
+  RandomNumberGenerator generator(default_random_number_generator_seed);
+  Context context(settings, profiler, generator);
+  auto platforms = generate_platforms(context, {box, empty, 1, 1, platform_count});
   /* Each platform in platforms should have a different y coordinate. */
   for (size_t i = 0; i < platform_count; i++) {
     const auto y = platforms[i].y;
@@ -258,23 +262,24 @@ TEST_CASE("generate_platforms() avoids multiple platforms on the same line") {
 }
 
 TEST_CASE("find_next_power_of_two() works for zero") {
-  REQUIRE(find_next_power_of_two(0) == 1);
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
+  REQUIRE(random_number_generator.find_next_power_of_two(0) == 1);
 }
 
 TEST_CASE("find_next_power_of_two() works for positive integers") {
   const unsigned long one = 1;
   unsigned long input;
   unsigned long expected;
-  int i;
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   /* Do not get to 31, because then the loop evaluates 1 << 32. */
-  for (i = 0; i < 31; i++) {
+  for (int i = 0; i < 31; i++) {
     expected = one << (i + 1);
     /* Test the next power for the current power. */
     input = one << i;
-    REQUIRE(expected == find_next_power_of_two(input));
+    REQUIRE(expected == random_number_generator.find_next_power_of_two(input));
     /* Test the next power for the next power minus one. */
     input = (one << (i + 1)) - 1;
-    REQUIRE(expected == find_next_power_of_two(input));
+    REQUIRE(expected == random_number_generator.find_next_power_of_two(input));
   }
 }
 
@@ -283,12 +288,10 @@ TEST_CASE("random_integer() respects the provided range") {
   const int max_min = 0;
   const int min_max = 0;
   const int max_max = 4;
-  int min;
-  int max;
-  int random_result;
-  for (min = min_min; min < max_min; min++) {
-    for (max = min_max; max < max_max; max++) {
-      random_result = random_integer(min, max);
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
+  for (int min = min_min; min < max_min; min++) {
+    for (int max = min_max; max < max_max; max++) {
+      const auto random_result = random_number_generator.random_integer(min, max);
       REQUIRE((min <= random_result && random_result <= max));
     }
   }
@@ -303,13 +306,12 @@ TEST_CASE("random_integer() is evenly distributed") {
   const int minimum_allowed_count = 1 << 7;
   const int maximum_allowed_count = expected_count + minimum_allowed_count;
   int counters[227 + 1 + 233] = {0};
-  int random_result;
-  int i;
-  for (i = 0; i < values * expected_count; i++) {
-    random_result = random_integer(minimum, maximum);
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
+  for (int i = 0; i < values * expected_count; i++) {
+    const auto random_result = random_number_generator.random_integer(minimum, maximum);
     counters[random_result - minimum]++;
   }
-  for (i = 0; i < values; i++) {
+  for (int i = 0; i < values; i++) {
     if (counters[i] < minimum_allowed_count) {
       FAIL("Counter is below minimum allowed count.");
     } else if (counters[i] > maximum_allowed_count) {
@@ -321,8 +323,9 @@ TEST_CASE("random_integer() is evenly distributed") {
 TEST_CASE("select_random_line_blindly() with one empty line") {
   const int tests = 1000;
   const std::vector<U8> array{0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    REQUIRE(0 == select_random_line_blindly(array));
+    REQUIRE(0 == select_random_line_blindly(random_number_generator, array));
   }
 }
 
@@ -332,8 +335,9 @@ TEST_CASE("select_random_line_blindly() with two empty lines") {
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 0};
   int counters[2] = {0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_blindly(array)] += 1;
+    counters[select_random_line_blindly(random_number_generator, array)] += 1;
   }
   /* Counters should be roughly the same. */
   REQUIRE(counters[0] > seven_sixteenths);
@@ -345,8 +349,9 @@ TEST_CASE("select_random_line_blindly() with three empty lines") {
   const auto five_sixteenths = 5 * tests / 16;
   const std::vector<U8> array{0, 0, 0};
   int counters[3] = {0, 0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_blindly(array)] += 1;
+    counters[select_random_line_blindly(random_number_generator, array)] += 1;
   }
   /* Counters should be roughly the same. */
   REQUIRE(counters[0] > five_sixteenths);
@@ -357,9 +362,10 @@ TEST_CASE("select_random_line_blindly() with three empty lines") {
 TEST_CASE("select_random_line_blindly() with one occupied line") {
   const auto tests = 10000;
   const std::vector<U8> array{1};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
-    REQUIRE(0 == select_random_line_blindly(array));
+    REQUIRE(0 == select_random_line_blindly(random_number_generator, array));
   }
 }
 
@@ -368,8 +374,9 @@ TEST_CASE("select_random_line_blindly() with occupied middle line") {
   const auto seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 1, 0};
   int counters[3] = {0, 0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_blindly(array)] += 1;
+    counters[select_random_line_blindly(random_number_generator, array)] += 1;
   }
   REQUIRE(0 == counters[1]);
   REQUIRE(counters[0] > seven_sixteenths);
@@ -379,9 +386,10 @@ TEST_CASE("select_random_line_blindly() with occupied middle line") {
 TEST_CASE("select_random_line_awarely() with one empty line") {
   const int tests = 1000;
   const std::vector<U8> array{0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
-    REQUIRE(0 == select_random_line_awarely(array));
+    REQUIRE(0 == select_random_line_awarely(random_number_generator, array));
   }
 }
 
@@ -391,8 +399,9 @@ TEST_CASE("select_random_line_awarely() with two empty lines") {
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 0};
   int counters[2] = {0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_awarely(array)] += 1;
+    counters[select_random_line_awarely(random_number_generator, array)] += 1;
   }
   /* Counters should be roughly the same. */
   REQUIRE(counters[0] > seven_sixteenths);
@@ -403,8 +412,9 @@ TEST_CASE("select_random_line_awarely() with three empty lines") {
   const int tests = 10000;
   const std::vector<U8> array{0, 0, 0};
   int counters[3] = {0, 0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_awarely(array)] += 1;
+    counters[select_random_line_awarely(random_number_generator, array)] += 1;
   }
   /* The middle line is the most distant one. */
   REQUIRE(counters[1] == tests);
@@ -413,9 +423,10 @@ TEST_CASE("select_random_line_awarely() with three empty lines") {
 TEST_CASE("select_random_line_awarely() with one occupied line") {
   const int tests = 1000;
   const std::vector<U8> array{1};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
     /* There is only one line to select, must select this one. */
-    REQUIRE(0 == select_random_line_awarely(array));
+    REQUIRE(0 == select_random_line_awarely(random_number_generator, array));
   }
 }
 
@@ -424,8 +435,9 @@ TEST_CASE("select_random_line_awarely() with occupied middle line") {
   const int seven_sixteenths = 7 * tests / 16;
   const std::vector<U8> array{0, 1, 0};
   int counters[3] = {0, 0, 0};
+  RandomNumberGenerator random_number_generator(default_random_number_generator_seed);
   for (int i = 0; i < tests; i++) {
-    counters[select_random_line_awarely(array)] += 1;
+    counters[select_random_line_awarely(random_number_generator, array)] += 1;
   }
   REQUIRE(0 == counters[1]);
   REQUIRE(counters[0] > seven_sixteenths);

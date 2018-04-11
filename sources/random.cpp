@@ -12,6 +12,8 @@
 
 static const char *const NAME_FILE_PATH = "data/name.txt";
 
+const U64 default_random_number_generator_seed = 3456661261407373589ULL;
+
 RandomNumberGenerator::RandomNumberGenerator(U64 seed) : x(seed) {
 }
 

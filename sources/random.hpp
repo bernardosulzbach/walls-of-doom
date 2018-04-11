@@ -4,6 +4,8 @@
 #include "integers.hpp"
 #include <string>
 
+extern const U64 default_random_number_generator_seed;
+
 class RandomNumberGenerator {
 public:
   explicit RandomNumberGenerator(U64 seed);

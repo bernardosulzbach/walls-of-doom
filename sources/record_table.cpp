@@ -1,4 +1,5 @@
 #include "record_table.hpp"
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 
@@ -8,6 +9,7 @@ const char *const default_record_table_filename = "data/records.txt";
 RecordTable::RecordTable(U32 maximum_size) : maximum_size(maximum_size) {
 }
 
+// TODO: use this.
 void RecordTable::replace_with_random_records() {
   records.clear();
   add_record(Record("Adam", 4000));

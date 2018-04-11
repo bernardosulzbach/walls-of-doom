@@ -2,6 +2,7 @@
 #define RECORD_TABLE_HPP
 
 #include "record.hpp"
+#include <vector>
 
 extern const U32 default_record_table_size;
 extern const char *const default_record_table_filename;

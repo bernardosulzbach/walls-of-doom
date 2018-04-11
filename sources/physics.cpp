@@ -390,9 +390,9 @@ static void reposition(Game *const game, Platform *const platform) {
   }
   int line;
   if (game->context.settings.get_reposition_algorithm() == REPOSITION_SELECT_BLINDLY) {
-    line = select_random_line_blindly(game->context.generator, occupied);
+    line = select_random_line_blindly(game->context.random_number_generator, occupied);
   } else {
-    line = select_random_line_awarely(game->context.generator, occupied);
+    line = select_random_line_awarely(game->context.random_number_generator, occupied);
   }
   if (platform->x > box.max_x) {
     subtract_platform(game, platform);
@@ -528,7 +528,7 @@ void update_perk(Game &game) {
   if (game.played_frames == game.perk_end_frame) {
     game.perk = PERK_NONE;
   } else if (game.played_frames == next_perk_frame) {
-    auto &generator = game.context.generator;
+    auto &generator = game.context.random_number_generator;
     game.perk = get_random_perk(generator);
     game.perk_x = generator.random_integer(0, settings.get_window_width() - settings.get_tile_w());
     const auto bar_height = settings.get_bar_height();

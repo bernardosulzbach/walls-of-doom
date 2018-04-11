@@ -7,6 +7,7 @@
 #include "constants.hpp"
 #include "context.hpp"
 #include "integers.hpp"
+#include "io.hpp"
 #include "logger.hpp"
 #include "numeric.hpp"
 #include "perk.hpp"
@@ -107,6 +108,6 @@ void game_set_message(Game *const game, const char *message, const U64 duration,
 /**
  * Runs the main game loop for the Game object and registers the player score.
  */
-Code run_game(Game *const game, SDL_Renderer *renderer);
+Code run_game(Renderer &renderer, Game &game);
 
 #endif
