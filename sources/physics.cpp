@@ -701,15 +701,12 @@ static bool is_touching_perk(const Game *const game) {
 }
 
 static void update_player_perk(Game *game) {
-  U64 end_frame;
-  U64 remaining_frames;
-  Player *player = game->player;
-  Perk perk;
+  const auto player = game->player;
   if (player->physics) {
     game->played_frames++;
     /* Check for expiration of the player's perk. */
     if (player->perk != PERK_NONE) {
-      remaining_frames = player->perk_end_frame - game->played_frames;
+      const auto remaining_frames = player->perk_end_frame - game->played_frames;
       if (remaining_frames == 0) {
         write_perk_faded_message(game, player->perk);
         player->perk = PERK_NONE;
@@ -720,7 +717,7 @@ static void update_player_perk(Game *game) {
     if (game->perk != PERK_NONE) {
       if (is_touching_perk(game)) {
         /* Copy the Perk to transfer it to the Player */
-        perk = game->perk;
+        const auto perk = game->perk;
         /* Remove the Perk from the screen */
         game->perk = PERK_NONE;
         /* Do not update game->perk_end_frame as it is used to */
@@ -739,7 +736,7 @@ static void update_player_perk(Game *game) {
           /* this part would removed it, but this seems more correct. */
           player->perk = PERK_NONE;
         } else {
-          end_frame = game->played_frames + game->context.settings.get_perk_screen_duration() * UPS;
+          const auto end_frame = game->played_frames + game->context.settings.get_perk_screen_duration() * UPS;
           player->perk_end_frame = end_frame;
         }
         write_got_perk_message(game, perk);
