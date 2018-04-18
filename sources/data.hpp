@@ -2,6 +2,7 @@
 #define DATA_H
 
 #include "code.hpp"
+#include "integers.hpp"
 #include <cstdio>
 #include <string>
 
@@ -20,14 +21,14 @@
 /**
  * Assesses whether or not a file with the provided filename exists.
  */
-bool file_exists(const char *filename);
+bool file_exists(const std::string &filename);
 
 /**
  * Returns the number of lines in a file.
  *
  * This is the count of occurrences of '\n'.
  */
-int file_line_count(const char *filename);
+U64 file_line_count(const std::string &filename);
 
 std::string get_full_path(const std::string &filename);
 

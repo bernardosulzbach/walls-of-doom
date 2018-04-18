@@ -28,12 +28,12 @@
 /**
  * Assesses whether or not a file with the provided filename exists.
  */
-bool file_exists(const char *filename) {
+bool file_exists(const std::string &filename) {
   struct stat buffer {};
-  return stat(filename, &buffer) == 0;
+  return stat(filename.c_str(), &buffer) == 0;
 }
 
-typedef enum Operation { READ, WRITE } Operation;
+enum Operation { READ, WRITE };
 
 /**
  * Writes to buffer the full path for a file created by Walls of Doom.
@@ -85,19 +85,21 @@ std::string get_full_path(const std::string &filename) {
  *
  * This is the count of occurrences of '\n'.
  */
-int file_line_count(const char *filename) {
-  int line_count = 0;
-  int read;
-  FILE *file = fopen(filename, "r");
-  if (file != nullptr) {
-    while ((read = fgetc(file)) != EOF) {
-      if (read == '\n') {
-        line_count++;
-      }
-    }
-    fclose(file);
+U64 file_line_count(const std::string &filename) {
+  std::ifstream stream(filename);
+  if (stream.fail()) {
+    throw std::logic_error("Could not open file.");
   }
-  return line_count;
+  U64 line_count = 0;
+  while (true) {
+    const auto result = stream.get();
+    if (result == std::istream::traits_type::eof()) {
+      return line_count;
+    }
+    if (result == '\n') {
+      line_count++;
+    }
+  }
 }
 
 void log_access(Operation operation, const size_t bytes, const char *filename) {
