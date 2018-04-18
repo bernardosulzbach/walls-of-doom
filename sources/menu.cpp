@@ -17,12 +17,17 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 static const char *profiler_filename = "performance.csv";
 
 class Menu {
 public:
+  inline Menu(std::string title, std::vector<std::string> options, size_t selected_option)
+      : title(std::move(title)), options(std::move(options)), selected_option(selected_option) {
+  }
+
   std::string title;
   std::vector<std::string> options;
   size_t selected_option{};
@@ -54,15 +59,12 @@ Code game(Context &context, Renderer &renderer, CommandTable *table) {
 int main_menu(Context &context, Renderer &renderer) {
   auto should_quit = false;
   Code code = CODE_OK;
-  Menu menu;
   CommandTable command_table{};
   initialize_command_table(&command_table);
   std::vector<std::string> options = {"Play", "Top Scores", "Info", "Quit"};
   const std::string game_name_string(game_name);
   std::string title = game_name_string + " " + WALLS_OF_DOOM_VERSION;
-  menu.title = title;
-  menu.options = options;
-  menu.selected_option = 0;
+  Menu menu(title, options, 0);
   while (!should_quit) {
     write_menu(renderer, menu);
     read_commands(context.settings, &command_table);
