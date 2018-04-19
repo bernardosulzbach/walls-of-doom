@@ -20,8 +20,6 @@
 #define WRITE_BYTES_COUNT_FORMAT "Expected to write %lu but actually wrote %lu!"
 #define READ_BYTES_COUNT_FORMAT "Expected to read %lu but actually read %lu!"
 
-#define DATA_DIRECTORY "data"
-
 /* Data directory is writable for the user, and read-only for others. */
 #define DATA_DIRECTORY_UMASK 0755
 
@@ -35,49 +33,8 @@ bool file_exists(const std::string &filename) {
 
 enum Operation { READ, WRITE };
 
-/**
- * Writes to buffer the full path for a file created by Walls of Doom.
- *
- * If one needs to access the log.txt file, one should use
- *
- *   char path[MAXIMUM_PATH_SIZE];
- *   get_full_path(path, filename);
- *
- * This is the correct way to access mutable files in any platform.
- *
- * This function does not rely on dynamic memory allocation.
- */
-Code get_full_path(char *buffer, const char *filename) {
-  struct stat status {};
-  size_t path_size = 0;
-  /* Check if the full path fits in the buffer. */
-  path_size = strlen(DATA_DIRECTORY);
-  path_size += SEPARATOR_SIZE;
-  path_size += strlen(filename);
-  path_size += 1;
-  if (path_size > MAXIMUM_PATH_SIZE) {
-    return CODE_ERROR;
-  }
-  /* Create the data directory if it does not exist. */
-  sprintf(buffer, "%s", DATA_DIRECTORY);
-  if (stat(buffer, &status) == -1) {
-#ifdef _WIN32
-    CreateDirectory(buffer, NULL);
-#else
-    mkdir(buffer, DATA_DIRECTORY_UMASK);
-#endif
-  }
-  /* Should not write from one buffer to the same buffer. */
-  sprintf(buffer, "%s/%s", DATA_DIRECTORY, filename);
-  return CODE_OK;
-}
-
-std::string get_full_path(const std::string &filename) {
-  char path[MAXIMUM_PATH_SIZE];
-  if (get_full_path(path, filename.c_str()) != CODE_OK) {
-    throw std::runtime_error("Failed to get full path.");
-  }
-  return std::string(path);
+std::string get_full_path(const std::string &name) {
+  return "data/" + name;
 }
 
 /**

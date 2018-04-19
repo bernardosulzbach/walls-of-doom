@@ -7,6 +7,7 @@
 #include "version.hpp"
 #include <cstdio>
 #include <ctime>
+#include <fstream>
 
 #define LOGGER_VERSION_MESSAGE "Version is " WALLS_OF_DOOM_VERSION "."
 
@@ -51,13 +52,9 @@ static void write_timestamp(char *buffer, const size_t buffer_size) {
   strftime(buffer, buffer_size, TIMESTAMP_FORMAT, time_info);
 }
 
-static void append_to_file(const char *path, const char *string) {
-  FILE *file;
-  file = fopen(path, "a");
-  if (file != nullptr) {
-    fprintf(file, "%s\n", string);
-    fclose(file);
-  }
+static void append_to_file(const std::string &path, const char *string) {
+  std::ofstream stream(path, std::ios::app);
+  stream << string << '\n';
 }
 
 /**
@@ -69,11 +66,10 @@ void log_message(const std::string &message) {
    *
    * Using resize_memory here may cause a deadlock.
    */
-  char path[MAXIMUM_PATH_SIZE];
   char stamp[TIMESTAMP_BUFFER_SIZE];
   char string[LOG_MESSAGE_SIZE];
   /* get_full_path does not use dynamic memory allocation. */
-  get_full_path(path, LOG_FILE_NAME);
+  const auto path = get_full_path(LOG_FILE_NAME);
   /* write_timestamp does not use dynamic memory allocation. */
   write_timestamp(stamp, TIMESTAMP_BUFFER_SIZE);
   sprintf(string, "[%s] %s", stamp, message.c_str());
@@ -82,11 +78,9 @@ void log_message(const std::string &message) {
 }
 
 void log_player_score(const Settings &settings, const U64 frame, const Score score) {
-  char path[MAXIMUM_PATH_SIZE];
   char string[LOG_MESSAGE_SIZE];
   if (settings.is_logging_player_score() != 0) {
-    get_full_path(path, SCORE_FILE_NAME);
     sprintf(string, "%ld,%ld", frame, score);
-    append_to_file(path, string);
+    append_to_file(get_full_path(SCORE_FILE_NAME), string);
   }
 }

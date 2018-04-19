@@ -19,8 +19,6 @@
 
 #define LARGE_STRING_BUFFER_SIZE 2048
 
-#define RESIZE_MEMORY_SIZE 4096
-
 #define WRAP_TEST_SOURCE "assets/tests/wrap-test-source.txt"
 #define WRAP_TEST_WIDTH_10 "assets/tests/wrap-test-width-10.txt"
 #define WRAP_TEST_WIDTH_20 "assets/tests/wrap-test-width-20.txt"
@@ -66,16 +64,6 @@ TEST_CASE("get_random_perk() is well distributed") {
   if (maximum_deviation > maximum_allowed_deviation) {
     FAIL("Maximum deviation is bigger than the allowed maximum.");
   }
-}
-
-TEST_CASE("get_full_path() checks for buffer overflow") {
-  char buffer[MAXIMUM_PATH_SIZE];
-  char big_filename[MAXIMUM_PATH_SIZE];
-  Code code;
-  memset(big_filename, 'A', MAXIMUM_PATH_SIZE);
-  big_filename[MAXIMUM_PATH_SIZE - 1] = '\0';
-  code = get_full_path(buffer, big_filename);
-  REQUIRE(CODE_ERROR == code);
 }
 
 TEST_CASE("trim_string() works with empty strings") {
