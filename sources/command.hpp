@@ -4,11 +4,14 @@
 #include "clock.hpp"
 #include "code.hpp"
 #include "settings.hpp"
+#include <vector>
+
+using CommandIntegralType = U16;
 
 /**
  * The Command enumeration represents the different commands the user may issue.
  */
-enum Command {
+enum Command : CommandIntegralType {
   COMMAND_NONE,
   COMMAND_UP,
   COMMAND_LEFT,
@@ -21,16 +24,72 @@ enum Command {
   COMMAND_PAUSE,
   COMMAND_DEBUG,
   COMMAND_QUIT,
-  COMMAND_CLOSE,
-  COMMAND_COUNT
+  COMMAND_CLOSE
+};
+
+inline std::vector<Command> get_commands() {
+  return {COMMAND_NONE,  COMMAND_UP,      COMMAND_LEFT,  COMMAND_CENTER, COMMAND_RIGHT, COMMAND_DOWN, COMMAND_JUMP,
+          COMMAND_ENTER, COMMAND_CONVERT, COMMAND_PAUSE, COMMAND_DEBUG,  COMMAND_QUIT,  COMMAND_CLOSE};
+}
+
+class CommandValue {
+public:
+  CommandValue(Command command, F64 value);
+
+  Command get_command() const;
+  F64 get_value() const;
+
+private:
+  Command command;
+  F64 value;
+};
+
+class CommandTableSnapshot {
+public:
+  explicit CommandTableSnapshot(const std::vector<CommandValue> &values);
+
+  inline std::vector<CommandValue>::const_iterator begin() const {
+    return values.begin();
+  }
+
+  inline std::vector<CommandValue>::const_iterator end() const {
+    return values.end();
+  }
+
+private:
+  std::vector<CommandValue> values;
+};
+
+class CommandTableHistory {
+public:
+  inline void append(CommandTableSnapshot snapshot) {
+    return snapshots.push_back(snapshot);
+  }
+
+  inline std::vector<CommandTableSnapshot>::const_iterator begin() const {
+    return snapshots.begin();
+  }
+
+  inline std::vector<CommandTableSnapshot>::const_iterator end() const {
+    return snapshots.end();
+  }
+
+private:
+  std::vector<CommandTableSnapshot> snapshots;
 };
 
 class CommandTable {
 public:
-  double status[COMMAND_COUNT];
-  Milliseconds last_issued[COMMAND_COUNT];
-  Milliseconds last_modified[COMMAND_COUNT];
+  std::vector<F64> status;
+  std::vector<Milliseconds> last_issued;
+  std::vector<Milliseconds> last_modified;
+
+  CommandTable();
+
+  CommandTableSnapshot get_snapshot() const;
 };
+
+std::string command_to_string(Command command);
 
 void initialize_command_table(CommandTable *table);
 

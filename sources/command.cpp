@@ -1,8 +1,34 @@
 #include "command.hpp"
-
 #include "clock.hpp"
 #include "joystick.hpp"
 #include "settings.hpp"
+#include <stdexcept>
+#include <vector>
+
+CommandTable::CommandTable()
+    : status(get_commands().size()), last_issued(get_commands().size()), last_modified(get_commands().size()) {
+}
+
+CommandTableSnapshot CommandTable::get_snapshot() const {
+  std::vector<CommandValue> values;
+  for (const auto command : get_commands()) {
+    if (status[command] != 0.0) {
+      values.emplace_back(command, status[command]);
+    }
+  }
+  return CommandTableSnapshot(values);
+}
+
+CommandValue::CommandValue(Command command, F64 value) : command(command), value(value) {
+}
+
+Command CommandValue::get_command() const {
+  return command;
+}
+
+F64 CommandValue::get_value() const {
+  return value;
+}
 
 /**
  * Returns the Command value corresponding to the provided key combination.
@@ -109,7 +135,7 @@ static void digest_event(const Settings &settings, CommandTable *table, const SD
 
 void initialize_command_table(CommandTable *table) {
   const auto time = get_milliseconds();
-  for (int i = 0; i < COMMAND_COUNT; i++) {
+  for (size_t i = 0; i < get_commands().size(); i++) {
     table->status[i] = 0.0;
     table->last_issued[i] = time;
     table->last_modified[i] = time;
@@ -160,4 +186,39 @@ Code wait_for_input(const Settings &settings, CommandTable *table) {
       return CODE_ERROR;
     }
   }
+}
+
+std::string command_to_string(Command command) {
+  switch (command) {
+  case COMMAND_NONE:
+    return "None";
+  case COMMAND_UP:
+    return "Up";
+  case COMMAND_LEFT:
+    return "Left";
+  case COMMAND_CENTER:
+    return "Center";
+  case COMMAND_RIGHT:
+    return "Right";
+  case COMMAND_DOWN:
+    return "Down";
+  case COMMAND_JUMP:
+    return "Jump";
+  case COMMAND_ENTER:
+    return "Enter";
+  case COMMAND_CONVERT:
+    return "Convert";
+  case COMMAND_PAUSE:
+    return "Pause";
+  case COMMAND_DEBUG:
+    return "Debug";
+  case COMMAND_QUIT:
+    return "Quit";
+  case COMMAND_CLOSE:
+    return "Close";
+  }
+  throw std::runtime_error("Should never happen.");
+}
+
+CommandTableSnapshot::CommandTableSnapshot(const std::vector<CommandValue> &values) : values(values) {
 }

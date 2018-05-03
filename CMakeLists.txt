@@ -98,6 +98,8 @@ set(walls-of-doom-sources
         sources/profiler.cpp
         sources/random.hpp
         sources/random.cpp
+        sources/replay.hpp
+        sources/replay.cpp
         sources/record.hpp
         sources/record.cpp
         sources/score.hpp

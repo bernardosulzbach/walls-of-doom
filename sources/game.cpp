@@ -3,6 +3,7 @@
 #include "io.hpp"
 #include "physics.hpp"
 #include "record_table.hpp"
+#include "replay.hpp"
 #include "text.hpp"
 #include <cstring>
 
@@ -147,6 +148,7 @@ Code run_game(Renderer &renderer, Game &game) {
   U64 limit = game.limit_played_frames;
   CommandTable table{};
   initialize_command_table(&table);
+  CommandTableHistory command_history;
   while ((game.player->table->status[COMMAND_QUIT] == 0.0) && *lives != 0 && game.played_frames < limit) {
     start_time = get_milliseconds();
     if (time_since_last_logic_update >= 2 * logic_interval) {
@@ -171,6 +173,7 @@ Code run_game(Renderer &renderer, Game &game) {
       continue;
     }
     while (game.current_frame < game.desired_frame) {
+      command_history.append(game.player->table->get_snapshot());
       update_game(game);
       update_player(&game, game.player);
       game.current_frame++;
@@ -196,5 +199,7 @@ Code run_game(Renderer &renderer, Game &game) {
     /* When the player quits from the game, it should go back to the menu. */
     code = CODE_OK;
   }
+  Replay replay(command_history);
+  // TODO: dump the replay.
   return code;
 }

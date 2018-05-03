@@ -578,7 +578,7 @@ static void buy_life(Game *game) {
 }
 
 void process_command(Game *game, Player *player) {
-  double *table = player->table->status;
+  auto &table = player->table->status;
   if (table[COMMAND_LEFT] != 0.0) {
     double speed = -table[COMMAND_LEFT] * PLAYER_RUNNING_SPEED * game->get_tile_w();
     player->speed_x = static_cast<int>(speed);
