@@ -82,8 +82,8 @@ Milliseconds update_game(Game *const game) {
  * This function prevents buffer overflow by truncating the message.
  */
 void game_set_message(Game *const game, const char *message, const U64 duration, const unsigned int priority) {
-  const auto last_has_expired = static_cast<const int>(game->message_end_frame <= game->current_frame);
-  const auto last_has_lower_priority = static_cast<const int>(game->message_priority <= priority);
+  const auto last_has_expired = static_cast<int>(game->message_end_frame <= game->current_frame);
+  const auto last_has_lower_priority = static_cast<int>(game->message_priority <= priority);
   if ((last_has_expired != 0) || (last_has_lower_priority != 0)) {
     game->message_end_frame = game->current_frame + duration * UPS;
     game->message_priority = priority;
